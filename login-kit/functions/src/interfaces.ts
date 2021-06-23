@@ -11,4 +11,3 @@ export interface AccessTokenParams {
 export interface CustomTokenParams {
     accessToken: string;
 }
-  
