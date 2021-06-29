@@ -1,13 +1,17 @@
 {
   "dependencies": {
+    "axios": "^0.21.1",
     "firebase-admin": "^9.9.0",
-    "firebase-functions": "^3.14.1"
+    "firebase-functions": "^3.14.1",
+    "form-data": "^4.0.0"
   },
   "name": "snap-kit-firebase-extensions",
   "description": "",
   "version": "1.0.0",
   "main": "index.js",
-  "devDependencies": {},
+  "devDependencies": {
+    "typescript": "^4.3.4"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
