@@ -38,9 +38,10 @@ params:
       The service account used for signing the custom authentication token. The account
       must have the iam.serviceAccounts.signBlob permission.
     type: string
-    example: ""
-    validationRegex: ""
-    validationErrorMessage: ""
+    example: "firebase-service-account@test-project.iam.gserviceaccount.com"
+    validationRegex: ^([a-zA-Z0-9]+(?:[.-]?[a-zA-Z0-9]+)*@[a-zA-Z0-9]+(?:[.-]?[a-zA-Z0-9]+)*\.[a-zA-Z]{2,7})$
+    validationErrorMessage: >-
+      The service account provided has invalid format.
     required: true
     immutable: true
 
