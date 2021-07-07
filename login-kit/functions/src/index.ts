@@ -8,7 +8,7 @@
  import { fetchAccessToken } from './snap-auth';
  
  const ERRORS = {
-     badRequest: "bad_request",
+     invalidPayload: "invalid_payload",
      missingConfig: "missing_config",
      unexpected: "unxpected"
  }
@@ -31,7 +31,7 @@ exports.getSnapAccessToken = functions.handler.https.onRequest(async (req, res) 
     } catch (error) {
         if (error instanceof TypeError) {
             res.status(400).send({
-                error: ERRORS.badRequest,
+                error: ERRORS.invalidPayload,
                 errorDescription: error.message
             })
             return
@@ -44,7 +44,7 @@ exports.getSnapAccessToken = functions.handler.https.onRequest(async (req, res) 
         }
     }
 
-    let clientSecret = functions.config()["snap"]["snapchatlogin"]["client_secret"];
+    const clientSecret = functions.config()["snap"]["snapchatlogin"]["client_secret"];
     if (!clientSecret) {
         res.status(400).send({
             error: ERRORS.missingConfig,
@@ -53,7 +53,7 @@ exports.getSnapAccessToken = functions.handler.https.onRequest(async (req, res) 
         return;
     }
 
-    let fetchAccessTokenResponse: any = await fetchAccessToken(accessTokenParams, clientSecret)
+    const fetchAccessTokenResponse: any = await fetchAccessToken(accessTokenParams, clientSecret)
     switch (fetchAccessTokenResponse.kind) {
         case "AccessTokenResponse":
             res.status(200).send({
@@ -112,7 +112,7 @@ function constructAccessTokenParams(req: functions.Request): AccessTokenParams {
         throw new TypeError(ERROR_DESCRIPTIONS.redirectUriMissing)
     }
 
-    let accessTokenParams = {
+    const accessTokenParams = {
         code: code,
         codeVerifier: codeVerifier,
         redirectUri: redirectUri
