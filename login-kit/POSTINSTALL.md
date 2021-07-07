@@ -14,14 +14,19 @@ https://firebase.google.com/docs/extensions/alpha/create-user-docs#writing-posti
 
 You can test out this extension right away!
 
-Visit the following URL:
-${function:greetTheWorld.url}
+Visit the following URLs:
+${function:getSnapAccessToken.url}
 
 # Using the extension
 
-When triggered by an HTTP request, this extension responds with the following specified greeting: "${param:GREETING} World from ${param:EXT_INSTANCE_ID}".
+This extension is composed of multiple HTTP functions described below, triggered using HTTP requests.
 
 To learn more about HTTP functions, visit the [functions documentation](https://firebase.google.com/docs/functions/http-events).
+
+## getSnapAccessToken
+
+When triggered by an HTTP request, this extension resource responds with a Snapchat OAuth 2.0 access token.
+
 
 <!-- We recommend keeping the following section to explain how to monitor extensions with Firebase -->
 # Monitoring
