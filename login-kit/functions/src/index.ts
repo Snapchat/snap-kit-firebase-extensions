@@ -15,7 +15,7 @@
  
  const ERROR_DESCRIPTIONS = {
      invalidArguments: 'invalid argument',
-     unspportedContentType: 'unsupported Content-Type',
+     unsupportedContentType: 'unsupported Content-Type',
      codeMissing: "code missing",
      codeVerifierMissing: "codeVerifier missing",
      redirectUriMissing: "redirectUri missing",
@@ -93,7 +93,7 @@ function constructAccessTokenParams(req: functions.Request): AccessTokenParams {
             ({code, codeVerifier, redirectUri} = req.body)
             break;
         default:
-            throw new TypeError(ERROR_DESCRIPTIONS.unspportedContentType);
+            throw new TypeError(ERROR_DESCRIPTIONS.unsupportedContentType);
     }
 
     code = code ? code.trim() : ""
