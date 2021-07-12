@@ -1,0 +1,111 @@
+# Learn detailed information about the fields of an extension.yaml file in the docs:
+# https://firebase.google.com/docs/extensions/alpha/ref-extension-yaml
+
+name: snapchat-login
+version: 0.0.1
+specVersion: v1beta
+
+displayName: Snapchat Login
+
+description: >-
+  Sign-in using Snapchat as the identity provider.
+
+license: Apache-2.0
+
+author:
+  authorName: Snap Inc.
+
+billingRequired: true
+
+resources:
+  - name: getSnapAccessToken
+    type: firebaseextensions.v1beta.function
+    description: >-
+      HTTP request-triggered function that responds with a Snapchat OAuth 2.0 access token
+    properties:
+      # LOCATION is a user-configured parameter value specified by the user
+      # during installation.
+      location: ${LOCATION}
+      httpsTrigger: {}
+      runtime: "nodejs12"
+
+# In the `params` field, set up your extension's user-configured parameters.
+# Learn more in the docs: https://firebase.google.com/docs/extensions/alpha/ref-extension-yaml#params-field
+params:
+  - param: SIGNING_SERVICE_ACCOUNT
+    label: Custom authentication token signing service account
+    description: >-
+      The service account used for signing the custom authentication token. The account
+      must have the iam.serviceAccounts.signBlob permission.
+    type: string
+    example: "firebase-service-account@test-project.iam.gserviceaccount.com"
+    validationRegex: ^([a-zA-Z0-9]+(?:[.-]?[a-zA-Z0-9]+)*@[a-zA-Z0-9]+(?:[.-]?[a-zA-Z0-9]+)*\.[a-zA-Z]{2,7})$
+    validationErrorMessage: >-
+      The service account provided has invalid format.
+    required: true
+    immutable: true
+
+  - param: CLIENT_ID
+    label: Snapchat OAuth 2.0 client ID
+    description: >-
+      The OAuth 2.0 confidential client ID that is retrievable from the Snapchat
+      developer portal (https://kit.snapchat.com/manage)
+    type: string
+    example: 54be5c13-2d61-4e28-94a5-3659ce0399a1
+    validationRegex: \b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b
+    validationErrorMessage: >-
+      The client ID must be retrieved from the Snapchat developer portal and is in 
+      UUID format.
+    required: true
+    immutable: true
+
+  - param: LOCATION
+    label: Cloud Functions location
+    description: >-
+      Where do you want to deploy the functions created for this extension?
+      For help selecting a location, refer to the [location selection
+      guide](https://firebase.google.com/docs/functions/locations).
+    type: select
+    options:
+      - label: Iowa (us-central1)
+        value: us-central1
+      - label: South Carolina (us-east1)
+        value: us-east1
+      - label: Northern Virginia (us-east4)
+        value: us-east4
+      - label: Los Angeles (us-west2)
+        value: us-west2
+      - label: Salt Lake City (us-west3)
+        value: us-west3
+      - label: Las Vegas (us-west4)
+        value: us-west4
+      - label: Warsaw (europe-central2)
+        value: europe-central2
+      - label: Belgium (europe-west1)
+        value: europe-west1
+      - label: London (europe-west2)
+        value: europe-west2
+      - label: Frankfurt (europe-west3)
+        value: europe-west3
+      - label: Zurich (europe-west6)
+        value: europe-west6
+      - label: Hong Kong (asia-east2)
+        value: asia-east2
+      - label: Tokyo (asia-northeast1)
+        value: asia-northeast1
+      - label: Osaka (asia-northeast2)
+        value: asia-northeast2
+      - label: Seoul (asia-northeast3)
+        value: asia-northeast3
+      - label: Mumbai (asia-south1)
+        value: asia-south1
+      - label: Jakarta (asia-southeast2)
+        value: asia-southeast2
+      - label: Montreal (northamerica-northeast1)
+        value: northamerica-northeast1
+      - label: Sao Paulo (southamerica-east1)
+        value: southamerica-east1
+      - label: Sydney (australia-southeast1)
+        value: australia-southeast1
+    required: true
+    immutable: true
