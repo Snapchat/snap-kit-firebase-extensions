@@ -7,7 +7,7 @@ Learn more about writing a PREINSTALL.md file in the docs:
 https://firebase.google.com/docs/extensions/alpha/create-user-docs#writing-preinstall
 -->
 
-Use this extension to let users authentication with Firebase using their Snapchat accounts.
+Use this extension to let users authenticate with Firebase using their Snapchat accounts.
 
 <!-- We recommend keeping the following section to explain how billing for Firebase Extensions works -->
 # Billing

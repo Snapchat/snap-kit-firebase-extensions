@@ -2,18 +2,18 @@
  * Copyright 2021 Snap, Inc.
  */
 
- import * as functions from 'firebase-functions';
+import * as functions from 'firebase-functions';
  
- import { AccessTokenParams } from './interfaces';
- import { fetchAccessToken } from './snap-auth';
- 
- const ERRORS = {
-    invalidPayload: "invalid_payload",
-    missingConfig: "missing_config",
-    unexpected: "unxpected"
+import { AccessTokenParams, FetchAccessTokenResponse } from './interfaces';
+import { fetchAccessToken } from './snap-auth';
+
+enum Errors {
+    InvalidPayload = "invalid_payload",
+    MissingConfig = "missing_config",
+    Unexpected = "unxpected"
 }
  
- const ERROR_DESCRIPTIONS = {
+const ERROR_DESCRIPTIONS = {
     invalidArguments: 'invalid argument',
     unsupportedContentType: 'unsupported Content-Type',
     codeMissing: "code missing",
@@ -31,29 +31,29 @@ exports.getSnapAccessToken = functions.handler.https.onRequest(async (req, res) 
     } catch (error) {
         if (error instanceof TypeError) {
             res.status(400).send({
-                error: ERRORS.invalidPayload,
+                error: Errors.InvalidPayload,
                 errorDescription: error.message
             })
             return
         } else {
             res.status(500).send({
-                error: ERRORS.unexpected,
+                error: Errors.Unexpected,
                 errorDescription: "unknown error constructing access token params"
             })
             return
         }
     }
 
-    const clientSecret = functions.config()["snap"]["snapchatlogin"]["client_secret"];
+    const clientSecret = functions.config().snap.snapchatlogin.client_secret;
     if (!clientSecret) {
         res.status(400).send({
-            error: ERRORS.missingConfig,
+            error: Errors.MissingConfig,
             errorDescription: ERROR_DESCRIPTIONS.clientSecretMissing
         })
         return;
     }
 
-    const fetchAccessTokenResponse: any = await fetchAccessToken(accessTokenParams, clientSecret)
+    const fetchAccessTokenResponse: FetchAccessTokenResponse = await fetchAccessToken(accessTokenParams, clientSecret)
     switch (fetchAccessTokenResponse.kind) {
         case "AccessTokenResponse":
             res.status(200).send({
@@ -71,7 +71,7 @@ exports.getSnapAccessToken = functions.handler.https.onRequest(async (req, res) 
             break;
         default:
             res.status(500).send({
-                error: ERRORS.unexpected,
+                error: Errors.Unexpected,
                 errorDescription: ERROR_DESCRIPTIONS.unexpectedResponseType
             })
             break;
@@ -86,10 +86,10 @@ function constructAccessTokenParams(req: functions.Request): AccessTokenParams {
     let redirectUri: string;
     
     switch (req.get('Content-Type')) {
-        case 'application/json;charset=UTF-8':
+        case "application/json;charset=UTF-8":
             ({code, codeVerifier, redirectUri} = req.body)
             break;
-        case 'application/x-www-form-urlencoded':
+        case "application/x-www-form-urlencoded":
             ({code, codeVerifier, redirectUri} = req.body)
             break;
         default:
@@ -112,11 +112,6 @@ function constructAccessTokenParams(req: functions.Request): AccessTokenParams {
         throw new TypeError(ERROR_DESCRIPTIONS.redirectUriMissing)
     }
 
-    const accessTokenParams = {
-        code: code,
-        codeVerifier: codeVerifier,
-        redirectUri: redirectUri
-    } as AccessTokenParams
-
+    const accessTokenParams = { code, codeVerifier, redirectUri} as AccessTokenParams
     return accessTokenParams;
 }

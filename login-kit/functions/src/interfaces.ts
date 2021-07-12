@@ -24,7 +24,9 @@ export interface AccessTokenErrorResponse {
     error: string;
     errorDescription: string;
 }
-  
+
+export type FetchAccessTokenResponse = AccessTokenResponse | AccessTokenErrorResponse;
+
 export interface CustomTokenParams {
     kind: "CustomTokenParams";
     accessToken: string;

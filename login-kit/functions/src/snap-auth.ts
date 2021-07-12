@@ -6,9 +6,14 @@ import axios from 'axios';
 import * as FormData from 'form-data';
 
 import * as config from "./config";
-import { AccessTokenErrorResponse, AccessTokenParams, AccessTokenResponse } from "./interfaces";
+import {
+    AccessTokenErrorResponse,
+    AccessTokenParams,
+    AccessTokenResponse,
+    FetchAccessTokenResponse
+} from "./interfaces";
 
-export const fetchAccessToken = (accessTokenParams:AccessTokenParams, clientSecret: string): Promise<any> => {
+export const fetchAccessToken = (accessTokenParams:AccessTokenParams, clientSecret: string): Promise<FetchAccessTokenResponse> => {
     const formData = new FormData();
     formData.append("client_id", config.default.clientId);
     formData.append("grant_type", "authorization_code");
