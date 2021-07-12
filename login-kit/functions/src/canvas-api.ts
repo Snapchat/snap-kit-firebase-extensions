@@ -8,7 +8,7 @@ import * as config from "./config";
 import { Me, MeError, MeResponse } from './interfaces';
 
 export const fetchExternalId = (accessToken:String): Promise<MeResponse> => {
-    const authorizationHeader = 'Bearer ' + accessToken
+    const authorizationHeader = `Bearer ${accessToken}`
     const headers = {
         "Content-Type": "application/json;charset=UTF-8",
         "Authorization": authorizationHeader
