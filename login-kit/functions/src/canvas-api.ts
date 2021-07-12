@@ -4,7 +4,7 @@
 
 import axios from 'axios';
 
-import * as config from "./config";
+import * as config from './config';
 import { Me, MeError, MeResponse } from './interfaces';
 
 export const fetchExternalId = (accessToken:String): Promise<MeResponse> => {
@@ -18,7 +18,7 @@ export const fetchExternalId = (accessToken:String): Promise<MeResponse> => {
     const query = JSON.stringify({ query: "Query{me{externalID}}" })
 
     return axios
-        .post(canvasApiEndpointUrl, query, { headers:headers })
+        .post(canvasApiEndpointUrl, query, { headers })
         .then(resp => {
             const data = resp.data.data;
             const errors = resp.data.errors;
