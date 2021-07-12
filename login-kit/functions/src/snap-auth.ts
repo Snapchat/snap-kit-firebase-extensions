@@ -26,10 +26,8 @@ export const fetchAccessToken = (
   const authorizationHeader = Buffer.from(unencodedAuthorizationHeader).toString("base64");
 
   const headers = {
-    "Content-Type": "application/json;charset=UTF-8",
-    "Cache-Control": "no-store",
-    "Pragma": "no-cache",
-    "Authorization": authorizationHeader,
+    "Content-Type": "application/x-www-form-urlencoded",
+    "Authorization": `Basic ${authorizationHeader}`,
   };
 
   const accessTokenEndpointUrl = `${config.default.authServiceUrl}/${config.default.accessTokenEndpointPath}`;
