@@ -13,7 +13,9 @@ import {
     FetchAccessTokenResponse
 } from "./interfaces";
 
-export const fetchAccessToken = (accessTokenParams:AccessTokenParams, clientSecret: string): Promise<FetchAccessTokenResponse> => {
+export const fetchAccessToken = (
+    accessTokenParams:AccessTokenParams, clientSecret: string): Promise<FetchAccessTokenResponse> => {
+
     const formData = new FormData();
     formData.append("client_id", config.default.clientId);
     formData.append("grant_type", "authorization_code");

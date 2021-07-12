@@ -29,7 +29,9 @@ const ERROR_DESCRIPTIONS = {
     unexpectedResponseType: "unexpected response type"
 }
 
-exports.getSnapAccessToken = functions.handler.https.onRequest(async (req, res) => {
+exports.getSnapAccessToken = functions.handler.https.onRequest(
+    async (req:functions.Request, res:functions.Response) => {
+
     let accessTokenParams: AccessTokenParams
     try {
         accessTokenParams = constructAccessTokenParams(req)
