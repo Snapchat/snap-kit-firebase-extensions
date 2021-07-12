@@ -21,7 +21,8 @@ export const fetchAccessToken = (accessTokenParams:AccessTokenParams, clientSecr
     formData.append("redirect_uri", accessTokenParams.redirectUri);
     formData.append("code_verifier", accessTokenParams.codeVerifier);
 
-    const authorizationHeader = btoa(config.default.clientId + ":" + clientSecret)
+    const unencodedAuthorizationHeader = `${config.default.clientId}:${clientSecret}`
+    const authorizationHeader = Buffer.from(unencodedAuthorizationHeader).toString("base64")
 
     const headers = {
         "Content-Type": "application/json;charset=UTF-8",
