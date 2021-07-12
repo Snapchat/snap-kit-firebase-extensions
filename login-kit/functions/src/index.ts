@@ -8,21 +8,21 @@
  import { fetchAccessToken } from './snap-auth';
  
  const ERRORS = {
-     invalidPayload: "invalid_payload",
-     missingConfig: "missing_config",
-     unexpected: "unxpected"
- }
+    invalidPayload: "invalid_payload",
+    missingConfig: "missing_config",
+    unexpected: "unxpected"
+}
  
  const ERROR_DESCRIPTIONS = {
-     invalidArguments: 'invalid argument',
-     unsupportedContentType: 'unsupported Content-Type',
-     codeMissing: "code missing",
-     codeVerifierMissing: "codeVerifier missing",
-     redirectUriMissing: "redirectUri missing",
+    invalidArguments: 'invalid argument',
+    unsupportedContentType: 'unsupported Content-Type',
+    codeMissing: "code missing",
+    codeVerifierMissing: "codeVerifier missing",
+    redirectUriMissing: "redirectUri missing",
  
-     clientSecretMissing: "snap.snapchatlogin.client_secret environment configuration missing",
-     unexpectedResponseType: "unexpected response type"
- }
+    clientSecretMissing: "snap.snapchatlogin.client_secret environment configuration missing",
+    unexpectedResponseType: "unexpected response type"
+}
 
 exports.getSnapAccessToken = functions.handler.https.onRequest(async (req, res) => {
     let accessTokenParams: AccessTokenParams
