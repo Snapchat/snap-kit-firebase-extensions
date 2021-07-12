@@ -7,6 +7,11 @@ import * as functions from 'firebase-functions';
 import { AccessTokenParams, FetchAccessTokenResponse } from './interfaces';
 import { fetchAccessToken } from './snap-auth';
 
+enum ContentType {
+    ApplicationJson = "application/json;charset=UTF-8",
+    FormUrlEncoded = "application/x-www-form-urlencoded"
+}
+
 enum Errors {
     InvalidPayload = "invalid_payload",
     MissingConfig = "missing_config",
@@ -85,11 +90,12 @@ function constructAccessTokenParams(req: functions.Request): AccessTokenParams {
     let codeVerifier: string;
     let redirectUri: string;
     
-    switch (req.get('Content-Type')) {
-        case "application/json;charset=UTF-8":
+    const requestContentType = req.get("Content-Type")
+    switch (requestContentType) {
+        case ContentType.ApplicationJson:
             ({code, codeVerifier, redirectUri} = req.body)
             break;
-        case "application/x-www-form-urlencoded":
+        case ContentType.FormUrlEncoded:
             ({code, codeVerifier, redirectUri} = req.body)
             break;
         default:
