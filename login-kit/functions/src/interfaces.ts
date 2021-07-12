@@ -27,6 +27,19 @@ export interface AccessTokenErrorResponse {
 
 export type FetchAccessTokenResponse = AccessTokenResponse | AccessTokenErrorResponse;
 
+export interface Me {
+    kind: "MyResource"
+    externalID: string;
+}
+
+export interface MeError {
+    kind: "MeError"
+    message: string;
+    code: string;
+}
+
+export type MeResponse = Me | MeError;
+
 export interface CustomTokenParams {
   kind: "CustomTokenParams";
   accessToken: string;

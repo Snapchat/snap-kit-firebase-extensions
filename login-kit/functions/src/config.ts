@@ -8,4 +8,7 @@ export default {
 
   authServiceUrl: "https://accounts.snapchat.com",
   accessTokenEndpointPath: "/accounts/oauth2/token",
+
+  canvasApiUrl: "https://graph.snapchat.com",
+  canvasApiEndpointPath: "graphql",
 };
