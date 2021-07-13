@@ -24,8 +24,8 @@ export const fetchExternalId = (accessToken:string): Promise<MeResponse> => {
 
         if (errors && errors.length > 0) {
           return {
-            message: errors[0].Message,
-            code: errors[0].Extensions.code,
+            message: errors[0].message,
+            code: errors[0].extensions.code,
           } as MeError;
         }
 
