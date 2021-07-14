@@ -17,6 +17,19 @@ author:
 
 billingRequired: true
 
+# Google APIs that are enabled by default when the extension is installed
+apis:
+  - apiName: iam.googleapis.com
+    reason: To sign custom authentication token
+  - apiName: iamcredentials.googleapis.com
+    reason: To sign custom authentication token
+  - apiName: stackdriver.googleapis.com
+    reason: Monitoring
+  - apiName: monitoring.googleapis.com
+    reason: Monitoring
+  - apiName: logging.googleapis.com
+    reason: Monitoring
+
 resources:
   - name: getSnapAccessToken
     type: firebaseextensions.v1beta.function

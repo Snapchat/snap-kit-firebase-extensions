@@ -79,13 +79,42 @@ export type FetchAccessTokenResponse = AccessTokenResponse | AccessTokenErrorRes
 
 export interface Me {
     kind: Kind.Me,
-    externalID: string;
+    externalId: string;
+}
+
+/**
+ * Constructs a Me
+ * @param {string} externalId
+ * @return {Me}
+ */
+export function constructMe(externalId: string): Me {
+  return {
+    kind: Kind.Me,
+    externalId,
+  } as Me;
 }
 
 export interface MeError {
     kind: Kind.MeError,
+    status: number;
     message: string;
     code: string;
+}
+
+/**
+ * Constructs a MeRror
+ * @param {number} status
+ * @param {string} message
+ * @param {string} code
+ * @return {MeError}
+ */
+export function constructMeError(status:number, message: string, code: string): MeError {
+  return {
+    kind: Kind.MeError,
+    status,
+    message,
+    code,
+  } as MeError;
 }
 
 export type MeResponse = Me | MeError;
