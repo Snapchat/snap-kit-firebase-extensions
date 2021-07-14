@@ -190,11 +190,13 @@ function extractAccessToken(req: functions.Request): string {
       ({accessToken} = req.body);
       break;
     default:
+      log.logInfo("unsupported Content-Type " + requestContentType);
       throw new TypeError(ERROR_DESCRIPTIONS.unsupportedContentType);
   }
 
   accessToken = accessToken ? accessToken.trim() : "";
   if (accessToken.length <= 0) {
+    log.logInfo("missing accessToken in request payload");
     throw new TypeError(ERROR_DESCRIPTIONS.accessTokenMissing);
   }
 
