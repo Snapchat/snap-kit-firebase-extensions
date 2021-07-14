@@ -102,7 +102,7 @@ export interface MeError {
 }
 
 /**
- * Constructs a MeRror
+ * Constructs a MeError
  * @param {number} status
  * @param {string} message
  * @param {string} code
