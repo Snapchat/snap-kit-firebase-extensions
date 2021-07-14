@@ -3,20 +3,19 @@
  */
 
 import axios from "axios";
-import * as FormData from "form-data";
 
 import * as config from "./config";
 import {
-  AccessTokenErrorResponse,
   AccessTokenParams,
-  AccessTokenResponse,
   FetchAccessTokenResponse,
+  constructAccessTokenErrorResponse,
+  constructAccessTokenResponse,
 } from "./interfaces";
+import * as log from "./logs";
 
 export const fetchAccessToken = (
     accessTokenParams:AccessTokenParams, clientSecret: string): Promise<FetchAccessTokenResponse> => {
-  const formData = new FormData();
-  formData.append("client_id", config.default.clientId);
+  const formData = new URLSearchParams();
   formData.append("grant_type", "authorization_code");
   formData.append("code", accessTokenParams.code);
   formData.append("redirect_uri", accessTokenParams.redirectUri);
@@ -36,19 +35,15 @@ export const fetchAccessToken = (
       .post(accessTokenEndpointUrl, formData, {headers})
       .then((resp) => {
         if (resp.status != 200) {
-          return {
-            status: resp.status,
-            error: resp.data.error,
-            errorDescription: resp.data.error_description,
-          } as AccessTokenErrorResponse;
+          return constructAccessTokenErrorResponse(resp.status, resp.data.error, resp.data.error_description);
         }
 
-        return {
-          accessToken: resp.data.access_token,
-          tokenType: resp.data.token_type,
-          expiresIn: resp.data.expires_in,
-          refreshToken: resp.data.refresh_token,
-          scope: resp.data.scope,
-        } as AccessTokenResponse;
+        return constructAccessTokenResponse(resp.data.access_token, resp.data.token_type, resp.data.expires_in,
+            resp.data.refresh_token, resp.data.scope);
+      })
+      .catch((error) => {
+        log.logError("error fetching access token", error);
+        return constructAccessTokenErrorResponse(error.response.status, error.response.data.error,
+            error.response.data.error_description);
       });
 };
