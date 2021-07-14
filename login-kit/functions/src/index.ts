@@ -7,6 +7,7 @@ import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
 
 import {fetchExternalId} from "./canvas-api";
+import * as config from "./config";
 import {AccessTokenParams, FetchAccessTokenResponse, Kind, MeResponse} from "./interfaces";
 import * as log from "./logs";
 import {fetchAccessToken} from "./snap-auth";
@@ -32,10 +33,16 @@ const ERROR_DESCRIPTIONS = {
   accessTokenMissing: "accessToken missing",
 
   clientSecretMissing: "snap.snapchatlogin.client_secret environment configuration missing",
+
+  unexpectedStatus: "unexpected status",
   unexpectedResponseType: "unexpected response type",
 
   customTokenCreationFailure: "failed to create a custom token",
 };
+
+admin.initializeApp({
+  serviceAccountId: config.default.signingServiceAcocunt,
+});
 
 exports.getCustomToken = functions.handler.https.onRequest(
     async (req:functions.Request, res:functions.Response) => {
@@ -44,14 +51,14 @@ exports.getCustomToken = functions.handler.https.onRequest(
         accessToken = extractAccessToken(req);
       } catch (error) {
         if (error instanceof TypeError) {
-          res.status(400).send({
+          sendJSONResponse(res, 400, {
             error: Errors.InvalidPayload,
             errorDescription: error.message,
           });
         } else {
-          res.status(500).send({
+          sendJSONResponse(res, 500, {
             error: Errors.Unexpected,
-            errorDescription: "unknown error constructing access token params",
+            errorDescription: "unknown error extracting access token",
           });
         }
         return;
@@ -62,7 +69,7 @@ exports.getCustomToken = functions.handler.https.onRequest(
         case Kind.Me: {
           // Snapchat external user ID is base64 encoded, and Firebase requires user IDs to be
           // URL-safe. Converting to base64 URL encoding.
-          const externalIdBase64Url = base64url.fromBase64(meResponse.externalID);
+          const externalIdBase64Url = base64url.fromBase64(meResponse.externalId);
           admin.auth()
               .createCustomToken(externalIdBase64Url, {})
               .then((customToken) => {
@@ -70,7 +77,7 @@ exports.getCustomToken = functions.handler.https.onRequest(
               })
               .catch((error) => {
                 log.logError("Custom token creation failure", error);
-                res.status(500).send({
+                sendJSONResponse(res, 500, {
                   error: Errors.Unexpected,
                   errorDescription: ERROR_DESCRIPTIONS.customTokenCreationFailure,
                 });
@@ -78,14 +85,21 @@ exports.getCustomToken = functions.handler.https.onRequest(
           break;
         }
         case Kind.MeError: {
-          res.status(500).send({
-            error: meResponse.code,
-            errorDescription: meResponse.message,
-          });
+          if (meResponse.status == 200) {
+            sendJSONResponse(res, 500, {
+              error: meResponse.code,
+              errorDescription: meResponse.message,
+            });
+          } else {
+            sendJSONResponse(res, 500, {
+              error: Errors.Unexpected,
+              errorDescription: ERROR_DESCRIPTIONS.unexpectedStatus,
+            });
+          }
           break;
         }
         default: {
-          res.status(500).send({
+          sendJSONResponse(res, 500, {
             error: Errors.Unexpected,
             errorDescription: ERROR_DESCRIPTIONS.unexpectedResponseType,
           });
@@ -176,11 +190,13 @@ function extractAccessToken(req: functions.Request): string {
       ({accessToken} = req.body);
       break;
     default:
+      log.logInfo("unsupported Content-Type " + requestContentType);
       throw new TypeError(ERROR_DESCRIPTIONS.unsupportedContentType);
   }
 
   accessToken = accessToken ? accessToken.trim() : "";
   if (accessToken.length <= 0) {
+    log.logInfo("missing accessToken in request payload");
     throw new TypeError(ERROR_DESCRIPTIONS.accessTokenMissing);
   }
 

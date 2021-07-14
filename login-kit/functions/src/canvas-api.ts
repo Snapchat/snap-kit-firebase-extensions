@@ -3,8 +3,10 @@
  */
 
 import axios from "axios";
+
 import * as config from "./config";
-import {Me, MeError, MeResponse} from "./interfaces";
+import {constructMe, constructMeError, MeResponse} from "./interfaces";
+import * as log from "./logs";
 
 export const fetchExternalId = (accessToken:string): Promise<MeResponse> => {
   const authorizationHeader = `Bearer ${accessToken}`;
@@ -14,7 +16,7 @@ export const fetchExternalId = (accessToken:string): Promise<MeResponse> => {
   };
 
   const canvasApiEndpointUrl = `${config.default.canvasApiUrl}/${config.default.canvasApiEndpointPath}`;
-  const query = JSON.stringify({query: "Query{me{externalID}}"});
+  const query = {query: "{me{externalID}}"};
 
   return axios
       .post(canvasApiEndpointUrl, query, {headers})
@@ -23,12 +25,13 @@ export const fetchExternalId = (accessToken:string): Promise<MeResponse> => {
         const errors = resp.data.errors;
 
         if (errors && errors.length > 0) {
-          return {
-            message: errors[0].message,
-            code: errors[0].extensions.code,
-          } as MeError;
+          return constructMeError(resp.status, errors[0].message, errors[0].extensions.code);
         }
 
-        return {externalID: data.me.externalID} as Me;
+        return constructMe(data.me.externalID);
+      })
+      .catch((error) => {
+        log.logError("error fetching external ID", error);
+        return constructMeError(error.response.status, "", "");
       });
 };

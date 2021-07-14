@@ -6,10 +6,10 @@ import axios from "axios";
 
 import * as config from "./config";
 import {
-  AccessTokenParams,
-  FetchAccessTokenResponse,
   constructAccessTokenErrorResponse,
   constructAccessTokenResponse,
+  AccessTokenParams,
+  FetchAccessTokenResponse,
 } from "./interfaces";
 import * as log from "./logs";
 
