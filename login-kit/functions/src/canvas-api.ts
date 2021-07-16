@@ -5,8 +5,17 @@
 import axios from "axios";
 
 import * as config from "./config";
-import {constructMe, constructMeError, MeResponse} from "./interfaces";
+import {
+  constructJWK,
+  constructMe,
+  constructMeError,
+  consturctJWKError,
+  FetchJWKResponse,
+  JWK,
+  MeResponse,
+} from "./interfaces";
 import * as log from "./logs";
+import * as NodeCache from "node-cache";
 
 export const fetchExternalId = (accessToken:string): Promise<MeResponse> => {
   const authorizationHeader = `Bearer ${accessToken}`;
@@ -33,5 +42,44 @@ export const fetchExternalId = (accessToken:string): Promise<MeResponse> => {
       .catch((error) => {
         log.logError("error fetching external ID", error);
         return constructMeError(error.response.status, "", "");
+      });
+};
+
+const CACHE = new NodeCache();
+const JWKS_KEY = "canvas-api-jwks";
+
+export const fetchJwks = (kid:string): Promise<FetchJWKResponse> => {
+  if (CACHE.has(JWKS_KEY)) {
+    const cachedJwks = CACHE.get<Map<string, JWK>>(JWKS_KEY);
+    const jwk = cachedJwks?.get(kid);
+    if (jwk) {
+      return Promise.resolve(jwk);
+    }
+  }
+
+  const jwksEndpointUrl = `${config.default.canvasApiUrl}/${config.default.jwksEndpointPath}`;
+  return axios
+      .get(jwksEndpointUrl, {})
+      .then((resp) => {
+        if (resp.status != 200) {
+          return consturctJWKError(resp.status);
+        }
+
+        const jwkMap = new Map();
+        resp.data.forEach((jwk:JWK) => {
+          jwkMap.set(jwk.kid, jwk);
+        });
+
+        if (!jwkMap.has(kid)) {
+          return consturctJWKError(resp.status);
+        }
+
+        CACHE.set(JWKS_KEY, jwkMap);
+
+        const jwk = jwkMap.get(kid);
+        return constructJWK(jwk);
+      })
+      .catch((error) => {
+        return consturctJWKError(error.response.status);
       });
 };

@@ -8,6 +8,8 @@ export enum Kind {
   AccessTokenErrorResponse = "AccessTokenErrorResponse",
   Me = "Me",
   MeError = "MeError",
+  JWK = "JWK",
+  JWKError = "JWKError",
 }
 
 export interface AccessTokenParams {
@@ -118,3 +120,47 @@ export function constructMeError(status:number, message: string, code: string): 
 }
 
 export type MeResponse = Me | MeError;
+
+export interface JWK {
+  kind: Kind.JWK;
+  kty: string;
+  crv: string;
+  kid: string;
+  x: string;
+  y: string
+}
+
+/**
+ * Constructs a JWK
+ * @param {JWK} jwk
+ * @return {JWK}
+ */
+export function constructJWK(jwk:JWK): JWK {
+  return {
+    kind: Kind.JWK,
+    kty: jwk.kty,
+    crv: jwk.crv,
+    kid: jwk.kid,
+    x: jwk.x,
+    y: jwk.y,
+  } as JWK;
+}
+
+export interface JWKError {
+  kind: Kind.JWKError;
+  status: number;
+}
+
+/**
+ * Constructs a JWKError
+ * @param {number} status
+ * @return {JWKError}
+ */
+export function consturctJWKError(status: number): JWKError {
+  return {
+    kind: Kind.JWKError,
+    status,
+  } as JWKError;
+}
+
+export type FetchJWKResponse = JWK | JWKError

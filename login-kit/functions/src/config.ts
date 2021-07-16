@@ -11,4 +11,5 @@ export default {
 
   canvasApiUrl: "https://graph.snapchat.com",
   canvasApiEndpointPath: "graphql",
+  jwksEndpointPath: ".well-known/jwks.json",
 };
