@@ -3,7 +3,8 @@
  */
 
 export default {
-  clientId: process.env.CLIENT_ID,
+  appId: process.env.APP_ID,
+  confidentialOAuthClientId: process.env.CONFIDENTIAL_OAUTH_CLIENT_ID,
   signingServiceAcocunt: process.env.SIGNING_SERVICE_ACCOUNT,
 
   authServiceUrl: "https://accounts.snapchat.com",

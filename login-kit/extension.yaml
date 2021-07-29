@@ -69,8 +69,22 @@ params:
     required: true
     immutable: true
 
-  - param: CLIENT_ID
-    label: Snapchat OAuth 2.0 client ID
+  - param: APP_ID
+    label: Snapchat Dev Portal App ID
+    description: >-
+      The app ID that is retrievable from the Snapchat
+      developer portal (https://kit.snapchat.com/manage)
+    type: string
+    example: 54be5c13-2d61-4e28-94a5-3659ce0399a1
+    validationRegex: \b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b
+    validationErrorMessage: >-
+      The app ID must be retrieved from the Snapchat developer portal and is in 
+      UUID format.
+    required: true
+    immutable: true
+
+  - param: CONFIDENTIAL_OAUTH_CLIENT_ID
+    label: Snapchat Confidential OAuth 2.0 client ID
     description: >-
       The OAuth 2.0 confidential client ID that is retrievable from the Snapchat
       developer portal (https://kit.snapchat.com/manage)

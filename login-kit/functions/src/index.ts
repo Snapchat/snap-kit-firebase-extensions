@@ -20,6 +20,7 @@ enum ContentType {
 enum Errors {
   InvalidPayload = "invalid_payload",
   MissingConfig = "missing_config",
+  Unauthorized = "unauthorized",
   Unexpected = "unexpected",
 }
 
@@ -170,6 +171,33 @@ exports.getSnapAccessToken = functions.handler.https.onRequest(
       }
 
       return;
+    }
+);
+
+const BEARER_TYPE = "Bearer";
+
+exports.updateUser = functions.handler.https.onRequest(
+    async (req:functions.Request, res:functions.Response) => {
+      const authHeader = req.get("Authorization");
+      if (!authHeader) {
+        log.logInfo("Authorization header missing");
+        sendJSONResponse(res, 401, {
+          error: Errors.Unauthorized,
+          errorDescription: "Authorization header missing",
+        });
+        return;
+      }
+
+      if (!authHeader.startsWith(BEARER_TYPE)) {
+        log.logInfo("auth token is not Bearer type");
+        sendJSONResponse(res, 401, {
+          error: Errors.Unauthorized,
+          errorDescription: "invalid auth token",
+        });
+        return;
+      }
+
+      // More code to come...
     }
 );
 

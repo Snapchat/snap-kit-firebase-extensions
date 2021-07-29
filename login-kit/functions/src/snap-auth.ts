@@ -3,6 +3,7 @@
  */
 
 import axios from "axios";
+import {JWK, JWKS, JWT} from "jose";
 
 import * as config from "./config";
 import {
@@ -14,14 +15,14 @@ import {
 import * as log from "./logs";
 
 export const fetchAccessToken = (
-    accessTokenParams:AccessTokenParams, clientSecret: string): Promise<FetchAccessTokenResponse> => {
+    accessTokenParams: AccessTokenParams, clientSecret: string): Promise<FetchAccessTokenResponse> => {
   const formData = new URLSearchParams();
   formData.append("grant_type", "authorization_code");
   formData.append("code", accessTokenParams.code);
   formData.append("redirect_uri", accessTokenParams.redirectUri);
   formData.append("code_verifier", accessTokenParams.codeVerifier);
 
-  const unencodedAuthorizationHeader = `${config.default.clientId}:${clientSecret}`;
+  const unencodedAuthorizationHeader = `${config.default.confidentialOAuthClientId}:${clientSecret}`;
   const authorizationHeader = Buffer.from(unencodedAuthorizationHeader).toString("base64");
 
   const headers = {
@@ -46,4 +47,33 @@ export const fetchAccessToken = (
         return constructAccessTokenErrorResponse(error.response.status, error.response.data.error,
             error.response.data.error_description);
       });
+};
+
+const ISS_SNAPCHAT = "Snapchat";
+
+export const verifyWebhookAuthToken = (
+    authToken: string,
+    publicJWKS: JWK.ECKey[],
+    expectedAudience: string,
+    ignoreTokenExpiry=false): boolean => {
+  if (!authToken) {
+    log.logInfo("Authorization token missing");
+    return false;
+  }
+
+  const keyStore = new JWKS.KeyStore(publicJWKS);
+
+  try {
+    JWT.verify(authToken, keyStore, {
+      issuer: ISS_SNAPCHAT,
+      audience: expectedAudience,
+      now: new Date(),
+      ignoreIat: true,
+      ignoreExp: ignoreTokenExpiry,
+    });
+    return true;
+  } catch (error) {
+    log.logError("error verifying token", error);
+    return false;
+  }
 };

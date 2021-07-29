@@ -3,15 +3,15 @@
  */
 
 import axios from "axios";
+import {JWK, JWKECKey} from "jose";
 
 import * as config from "./config";
 import {
-  constructJWK,
+  consturctJWKError,
+  constructJWKSet,
   constructMe,
   constructMeError,
-  consturctJWKError,
   FetchJWKResponse,
-  JWK,
   MeResponse,
 } from "./interfaces";
 import * as log from "./logs";
@@ -50,10 +50,12 @@ const JWKS_KEY = "canvas-api-jwks";
 
 export const fetchJwks = (kid:string): Promise<FetchJWKResponse> => {
   if (CACHE.has(JWKS_KEY)) {
-    const cachedJwks = CACHE.get<Map<string, JWK>>(JWKS_KEY);
-    const jwk = cachedJwks?.get(kid);
-    if (jwk) {
-      return Promise.resolve(jwk);
+    const cachedJwks = CACHE.get<Map<string, JWK.ECKey>>(JWKS_KEY);
+    if (cachedJwks) {
+      const jwk = cachedJwks.get(kid);
+      if (jwk) {
+        return Promise.resolve(constructJWKSet(Array.from(cachedJwks.values())));
+      }
     }
   }
 
@@ -66,8 +68,8 @@ export const fetchJwks = (kid:string): Promise<FetchJWKResponse> => {
         }
 
         const jwkMap = new Map();
-        resp.data.forEach((jwk:JWK) => {
-          jwkMap.set(jwk.kid, jwk);
+        resp.data.forEach((jwk:JWKECKey) => {
+          jwkMap.set(jwk.kid, JWK.asKey(jwk));
         });
 
         if (!jwkMap.has(kid)) {
@@ -76,8 +78,7 @@ export const fetchJwks = (kid:string): Promise<FetchJWKResponse> => {
 
         CACHE.set(JWKS_KEY, jwkMap);
 
-        const jwk = jwkMap.get(kid);
-        return constructJWK(jwk);
+        return constructJWKSet(Array.from(jwkMap.values()));
       })
       .catch((error) => {
         return consturctJWKError(error.response.status);

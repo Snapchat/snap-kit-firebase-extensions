@@ -2,13 +2,15 @@
  * Copyright 2021 Snap, Inc.
  */
 
+import {JWK} from "jose";
+
 export enum Kind {
   AccessTokenParams = "AccessTokenParams",
   AccessTokenResponse = "AccessTokenResponse",
   AccessTokenErrorResponse = "AccessTokenErrorResponse",
   Me = "Me",
   MeError = "MeError",
-  JWK = "JWK",
+  JWKSet = "JWKSet",
   JWKError = "JWKError",
 }
 
@@ -121,29 +123,21 @@ export function constructMeError(status:number, message: string, code: string): 
 
 export type MeResponse = Me | MeError;
 
-export interface JWK {
-  kind: Kind.JWK;
-  kty: string;
-  crv: string;
-  kid: string;
-  x: string;
-  y: string
+export interface JWKSet {
+  kind: Kind.JWKSet;
+  keys: JWK.ECKey[];
 }
 
 /**
- * Constructs a JWK
- * @param {JWK} jwk
- * @return {JWK}
+ * Constructs a JWKSet
+ * @param {JWK.ECKey[]} keys
+ * @return {JWKSet}
  */
-export function constructJWK(jwk:JWK): JWK {
+export function constructJWKSet(keys: JWK.ECKey[]): JWKSet {
   return {
-    kind: Kind.JWK,
-    kty: jwk.kty,
-    crv: jwk.crv,
-    kid: jwk.kid,
-    x: jwk.x,
-    y: jwk.y,
-  } as JWK;
+    kind: Kind.JWKSet,
+    keys: keys,
+  } as JWKSet;
 }
 
 export interface JWKError {
@@ -163,4 +157,4 @@ export function consturctJWKError(status: number): JWKError {
   } as JWKError;
 }
 
-export type FetchJWKResponse = JWK | JWKError
+export type FetchJWKResponse = JWKSet | JWKError
