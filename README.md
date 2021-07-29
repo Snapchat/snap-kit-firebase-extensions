@@ -14,27 +14,9 @@ Following are the list of extensions:
 Learn more about building Firebase Extensions [here](https://firebase.google.com/docs/extensions/alpha/overview-build-extensions).
 
 ## Setup
-
-### Node.js and npm
-Install `Node.js` and `npm`:
+Run:
 ```
-brew install node
-```
-
-### Firebase CLI
-Install `Firebase CLI`:
-```
-npm install -g firebase-tools
-```
-
-Sign in with your Google account:
-```
-firebase login
-```
-
-Enable the extension developer commands:
-```
-firebase --open-sesame extdev
+make dev/setup
 ```
 
 ### Setting up a new extension

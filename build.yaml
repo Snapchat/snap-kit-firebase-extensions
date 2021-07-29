@@ -1,0 +1,15 @@
+# Auto generated build.yaml by Machamp
+version: 1
+machamp:
+  snap-kit-firebase-extensions:
+    tag_template: '0.1.%build.counter%'
+    timeout: 3600
+    update_ghe: true
+    code_coverage: false
+    steps:
+      node-setup:
+        type: cmd
+        command: make dev/setup/node
+      npm-build-and-test-login-kit-extension:
+        type: cmd
+        command: make dev/build/login-kit
