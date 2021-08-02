@@ -1,3 +1,5 @@
+SHELL := /bin/bash
+
 ##@ Dev
 .PHONY: dev/setup dev/build/% dev/validate/% dev/run/%
 
@@ -14,12 +16,14 @@ dev/setup/node:
 
 dev/validate/%:
 	pushd $(@F)/functions; \
+	npm install || exit 1; \
 	npm run lint || exit 1; \
 	npm test || exit 1; \
 	popd;
 
 dev/build/%:
 	pushd $(@F)/functions; \
+	npm install || exit 1; \
 	npm run build || exit 1; \
 	npm run test || exit 1; \
 	popd; \

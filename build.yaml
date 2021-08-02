@@ -1,7 +1,7 @@
 # Auto generated build.yaml by Machamp
 version: 1
 machamp:
-  snap-kit-firebase-extensions:
+  snap-kit-firebase-extensions-build:
     tag_template: '0.1.%build.counter%'
     timeout: 3600
     update_ghe: true
