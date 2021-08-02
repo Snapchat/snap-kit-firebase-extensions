@@ -2,8 +2,7 @@
  * Copyright 2021 Snap, Inc.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 
 /**
  * Generates an info log
@@ -34,3 +33,5 @@ export function logError(message: any, ...optionalParams: any[]): void {
   const logMessage = `👻[Error] ${message}`;
   console.error(logMessage, optionalParams);
 }
+
+/* eslint-enable */

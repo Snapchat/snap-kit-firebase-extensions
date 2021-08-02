@@ -8,7 +8,7 @@ import * as functions from "firebase-functions";
 
 import {fetchExternalId} from "./canvas-api";
 import * as config from "./config";
-import {AccessTokenParams, FetchAccessTokenResponse, Kind, MeResponse} from "./interfaces";
+import {AccessTokenParams, FetchAccessTokenResponse, Kind, MeResponse, WebhookObject} from "./interfaces";
 import * as log from "./logs";
 import {fetchAccessToken} from "./snap-auth";
 
@@ -174,6 +174,14 @@ exports.getSnapAccessToken = functions.handler.https.onRequest(
     }
 );
 
+enum ObjectType {
+  SnapchatUser = "snapchat_user",
+}
+
+enum UpdateField {
+  AccountStatus = "account_status",
+}
+
 const BEARER_TYPE = "Bearer";
 
 exports.updateUser = functions.handler.https.onRequest(
@@ -197,9 +205,64 @@ exports.updateUser = functions.handler.https.onRequest(
         return;
       }
 
-      // More code to come...
+      // More authorization related code to come...
+
+      if (config.default.handleSnapchatUserDeletion === "false") {
+        res.sendStatus(200);
+        log.logInfo("user not deleted!");
+        return;
+      }
+
+      if (req.get("Content-Type") !== ContentType.ApplicationJson) {
+        sendJSONResponse(res, 400, {
+          error: Errors.InvalidPayload,
+          errorDescription: ERROR_DESCRIPTIONS.unsupportedContentType,
+        });
+        return;
+      }
+
+      switch (req.body.objectType) {
+        case ObjectType.SnapchatUser:
+          handleSnapchatUserUpdate(req.body.object)
+              .then(() => {
+                res.sendStatus(200);
+              })
+              .catch((error) => {
+                log.logError("error handling Snapchat user update", error);
+                res.sendStatus(500);
+              });
+          break;
+        default:
+          res.sendStatus(200);
+          break;
+      }
     }
 );
+
+// eslint-disable-next-line  @typescript-eslint/no-explicit-any
+const handleSnapchatUserUpdate = (object: WebhookObject): Promise<void> => {
+  if (object.objectType != "snapchat_user") {
+    return Promise.resolve();
+  }
+
+  const externalIdBase64Url = base64url.fromBase64(object.id);
+
+  for (let i = 0; i < object.updates.length; i++) {
+    switch (object.updates[i].field) {
+      case UpdateField.AccountStatus:
+        if (object.updates[i].value.verb === "deleted") {
+          return admin
+              .auth()
+              .deleteUser(externalIdBase64Url);
+        }
+        return Promise.resolve();
+      default:
+        break;
+    }
+  }
+
+  return Promise.resolve();
+};
 
 /**
  * Extracts access token from a request.
@@ -277,13 +340,16 @@ function constructAccessTokenParams(req: functions.Request): AccessTokenParams {
   return accessTokenParams;
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+
 /**
  * Sends a JSON response
  * @param {functions.Response} res
  * @param {number} status
- * @param {any} paylod
+ * @param {any} payload
  */
-function sendJSONResponse(res: functions.Response, status:number, paylod: any): void {
-  res.status(status).contentType(ContentType.ApplicationJson).send(paylod);
+function sendJSONResponse(res: functions.Response, status:number, payload: any): void {
+  res.status(status).contentType(ContentType.ApplicationJson).send(payload);
 }
+
+/* eslint-enable */

@@ -99,7 +99,7 @@ export function constructMe(externalId: string): Me {
 }
 
 export interface MeError {
-    kind: Kind.MeError,
+    kind: Kind.MeError;
     status: number;
     message: string;
     code: string;
@@ -158,3 +158,19 @@ export function consturctJWKError(status: number): JWKError {
 }
 
 export type FetchJWKResponse = JWKSet | JWKError
+
+export interface SnapchatAccountStatus {
+  verb: string;
+}
+
+export interface Update {
+  field: string;
+  value: SnapchatAccountStatus;
+  updateTimeMsecs: number;
+}
+
+export interface WebhookObject {
+  objectType: string;
+  id: string;
+  updates: Update[];
+}
