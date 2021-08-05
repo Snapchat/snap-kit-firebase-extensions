@@ -6,11 +6,18 @@ import base64url from "base64url";
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
 
-import {fetchExternalId} from "./canvas-api";
+import {fetchExternalId, fetchJwks} from "./canvas-api";
 import * as config from "./config";
-import {AccessTokenParams, FetchAccessTokenResponse, Kind, MeResponse, WebhookObject} from "./interfaces";
+import {
+  AccessTokenParams,
+  FetchAccessTokenResponse,
+  FetchJWKResponse,
+  Kind,
+  MeResponse,
+  WebhookObject,
+} from "./interfaces";
 import * as log from "./logs";
-import {fetchAccessToken} from "./snap-auth";
+import {extractKidFromWebhookAuthToken, fetchAccessToken, verifyWebhookAuthToken} from "./snap-auth";
 
 enum ContentType {
   ApplicationJson = "application/json;charset=UTF-8",
@@ -183,9 +190,16 @@ enum UpdateField {
 }
 
 const BEARER_TYPE = "Bearer";
+const BEARER_LENGTH = 6;
 
 exports.updateUser = functions.handler.https.onRequest(
     async (req:functions.Request, res:functions.Response) => {
+      if (!config.default.handleSnapchatUserDeletion) {
+        res.sendStatus(200);
+        log.logInfo("user not deleted!");
+        return;
+      }
+
       const authHeader = req.get("Authorization");
       if (!authHeader) {
         log.logInfo("Authorization header missing");
@@ -200,16 +214,35 @@ exports.updateUser = functions.handler.https.onRequest(
         log.logInfo("auth token is not Bearer type");
         sendJSONResponse(res, 401, {
           error: Errors.Unauthorized,
-          errorDescription: "invalid auth token",
+          errorDescription: "invalid auth token type",
         });
         return;
       }
 
-      // More authorization related code to come...
+      const token = authHeader.substr(BEARER_LENGTH).trim();
+      const kid = extractKidFromWebhookAuthToken(token);
+      if (kid == null || kid.length == 0) {
+        sendJSONResponse(res, 401, {
+          error: Errors.Unauthorized,
+          errorDescription: "mal-formatted authotken",
+        });
+        return;
+      }
 
-      if (config.default.handleSnapchatUserDeletion === "false") {
-        res.sendStatus(200);
-        log.logInfo("user not deleted!");
+      const jwksResponse: FetchJWKResponse = await fetchJwks(kid);
+      if (jwksResponse.kind == Kind.JWKError) {
+        sendJSONResponse(res, 401, {
+          error: Errors.Unauthorized,
+          errorDescription: "error fetching public JWKS",
+        });
+        return;
+      }
+
+      if (!verifyWebhookAuthToken(token, jwksResponse.keys, config.default.appId)) {
+        sendJSONResponse(res, 401, {
+          error: Errors.Unauthorized,
+          errorDescription: "invalid auth token",
+        });
         return;
       }
 

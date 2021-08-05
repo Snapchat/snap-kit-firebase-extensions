@@ -6,7 +6,7 @@ import {expect} from "chai";
 import { JWK, JWKECKey } from "jose";
 import {describe, it} from "mocha";
 
-import {verifyWebhookAuthToken} from "../src/snap-auth";
+import {extractKidFromWebhookAuthToken, verifyWebhookAuthToken} from "../src/snap-auth";
 
 const TEST_VALID_TOKEN = "eyJraWQiOiI5MjRkZDJmMS0zYjVlLTQ0NTYtYjIyMC1iNzcyOWIyZDhjZjEiLCJ0eXAiOiJKV1QiLCJhbGc\
 iOiJFUzI1NiJ9.eyJhdWQiOiJ0ZXN0LWF1ZGllbmNlIiwiaXNzIjoiU25hcGNoYXQiLCJleHAiOjE2MjczMzA4NDgsImlhdCI6MTYyNzMzMDI\
@@ -102,5 +102,10 @@ describe("Snap Auth Tests", function() {
           .map((publicKey: JWKECKey) => JWK.asKey(publicKey));
         const isTokenValid = verifyWebhookAuthToken(TEST_VALID_TOKEN, publicJWKS, TEST_AUDIENCE, true);
         expect(isTokenValid).to.false;
+    });
+
+    it('Test Extract kid from Token', function() {
+        const kid = extractKidFromWebhookAuthToken(TEST_VALID_TOKEN);
+        expect(kid).to.equal("924dd2f1-3b5e-4456-b220-b7729b2d8cf1");
     });
 });
