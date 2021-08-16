@@ -15,7 +15,8 @@ https://firebase.google.com/docs/extensions/alpha/create-user-docs#writing-posti
 You can test out this extension right away!
 
 Visit the following URLs:
-${function:getSnapAccessToken.url}
+${function:getCustomToken.url}
+${function:updateUser}
 
 # Using the extension
 
@@ -23,10 +24,17 @@ This extension is composed of multiple HTTP functions described below, triggered
 
 To learn more about HTTP functions, visit the [functions documentation](https://firebase.google.com/docs/functions/http-events).
 
-## getSnapAccessToken
+## getCustomToken
 
-When triggered by an HTTP request, this extension resource responds with a Snapchat OAuth 2.0 access token.
+When triggered by an HTTP request, this extension resource responds with a
+[Firebase Custom Token](https://firebase.google.com/docs/auth/admin/create-custom-tokens) using Snapchat as the
+identity provider.
 
+## updateUser
+When triggered by an HTTP request, this extension resource updates users. Currently the only update supported is
+deletion of users created using Firebase Custom Authentication with Snapchat as the identity provider. This resource
+is not designed to be called explicitly, and should be used with Snap webhooks. Please DO NOT use unless you know
+exactly what you are doing wiht this resource.
 
 <!-- We recommend keeping the following section to explain how to monitor extensions with Firebase -->
 # Monitoring

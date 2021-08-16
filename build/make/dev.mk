@@ -26,13 +26,14 @@ dev/build/%:
 	npm install || exit 1; \
 	npm run build || exit 1; \
 	npm run test || exit 1; \
-	popd; \
+	popd;
 
 dev/run/%:
-	pushd $(@F); \
-	pushd functions; npm run build; popd;\
-	firebase functions:config:get --project=snap-connect-staging > .runtimeconfig.json; \
-	GIT_ROOT=$(git rev-parse --show-toplevel) ; \
-	export GOOGLE_APPLICATION_CREDENTIALS=${GIT_ROOT}/login-kit/.key.json ; \
-	echo ${GOOGLE_APPLICATION_CREDENTIALS} ; \
-	firebase ext:dev:emulators:start --test-params=test-params.env --project=snap-connect-staging;
+	pushd $(@F)/functions ; \
+	firebase functions:config:get --project=snap-connect-staging > .runtimeconfig.json ; \
+	npm run build ; \
+	popd ; \
+	export GOOGLE_APPLICATION_CREDENTIALS=${CURDIR}/$(@F)/.key.json ; \
+	pushd $(@F) ; \
+	firebase ext:dev:emulators:start --test-params=test-params.env --project=snap-connect-staging ; \
+	popd ;

@@ -38,8 +38,6 @@ const ERROR_DESCRIPTIONS = {
   codeVerifierMissing: "codeVerifier missing",
   redirectUriMissing: "redirectUri missing",
 
-  accessTokenMissing: "accessToken missing",
-
   clientSecretMissing: "snap.snapchatlogin.client_secret environment configuration missing",
 
   unexpectedStatus: "unexpected status",
@@ -54,9 +52,9 @@ admin.initializeApp({
 
 exports.getCustomToken = functions.handler.https.onRequest(
     async (req:functions.Request, res:functions.Response) => {
-      let accessToken: string;
+      let accessTokenParams: AccessTokenParams;
       try {
-        accessToken = extractAccessToken(req);
+        accessTokenParams = constructAccessTokenParams(req);
       } catch (error) {
         if (error instanceof TypeError) {
           sendJSONResponse(res, 400, {
@@ -66,10 +64,44 @@ exports.getCustomToken = functions.handler.https.onRequest(
         } else {
           sendJSONResponse(res, 500, {
             error: Errors.Unexpected,
-            errorDescription: "unknown error extracting access token",
+            errorDescription: "unknown error constructing access token params",
           });
         }
         return;
+      }
+
+      const clientSecret = functions.config().snap.snapchatlogin.client_secret;
+      if (!clientSecret) {
+        log.logInfo("clientSecret not found. run the following command to set the secret: " +
+            "firebase functions:config:set snap.snapchatlogin.client_secret=\"<client_secret>\"" +
+            "--project=<firebase_project>");
+        sendJSONResponse(res, 400, {
+          error: Errors.MissingConfig,
+          errorDescription: ERROR_DESCRIPTIONS.clientSecretMissing,
+        });
+        return;
+      }
+
+      const fetchAccessTokenResponse: FetchAccessTokenResponse =
+          await fetchAccessToken(accessTokenParams, clientSecret);
+
+      let accessToken: string;
+      switch (fetchAccessTokenResponse.kind) {
+        case Kind.AccessTokenResponse:
+          accessToken = fetchAccessTokenResponse.accessToken;
+          break;
+        case Kind.AccessTokenErrorResponse:
+          sendJSONResponse(res, fetchAccessTokenResponse.status, {
+            error: fetchAccessTokenResponse.error,
+            errorDescription: fetchAccessTokenResponse.errorDescription,
+          });
+          return;
+        default:
+          sendJSONResponse(res, 500, {
+            error: Errors.Unexpected,
+            errorDescription: ERROR_DESCRIPTIONS.unexpectedResponseType,
+          });
+          return;
       }
 
       const meResponse:MeResponse = await fetchExternalId(accessToken);
@@ -113,68 +145,6 @@ exports.getCustomToken = functions.handler.https.onRequest(
           });
           break;
         }
-      }
-
-      return;
-    }
-);
-
-exports.getSnapAccessToken = functions.handler.https.onRequest(
-    async (req:functions.Request, res:functions.Response) => {
-      let accessTokenParams: AccessTokenParams;
-      try {
-        accessTokenParams = constructAccessTokenParams(req);
-      } catch (error) {
-        if (error instanceof TypeError) {
-          sendJSONResponse(res, 400, {
-            error: Errors.InvalidPayload,
-            errorDescription: error.message,
-          });
-        } else {
-          sendJSONResponse(res, 500, {
-            error: Errors.Unexpected,
-            errorDescription: "unknown error constructing access token params",
-          });
-        }
-        return;
-      }
-
-      const clientSecret = functions.config().snap.snapchatlogin.client_secret;
-      if (!clientSecret) {
-        log.logInfo("clientSecret not found. run the following command to set the secret: " +
-            "firebase functions:config:set snap.snapchatlogin.client_secret=\"<client_secret>\"" +
-            "--project=<firebase_project>");
-        sendJSONResponse(res, 400, {
-          error: Errors.MissingConfig,
-          errorDescription: ERROR_DESCRIPTIONS.clientSecretMissing,
-        });
-        return;
-      }
-
-      const fetchAccessTokenResponse: FetchAccessTokenResponse =
-          await fetchAccessToken(accessTokenParams, clientSecret);
-
-      switch (fetchAccessTokenResponse.kind) {
-        case Kind.AccessTokenResponse:
-          sendJSONResponse(res, 200, {
-            accessToken: fetchAccessTokenResponse.accessToken,
-            tokenType: fetchAccessTokenResponse.tokenType,
-            expiresIn: fetchAccessTokenResponse.expiresIn,
-            scope: fetchAccessTokenResponse.scope,
-          });
-          break;
-        case Kind.AccessTokenErrorResponse:
-          sendJSONResponse(res, fetchAccessTokenResponse.status, {
-            error: fetchAccessTokenResponse.error,
-            errorDescription: fetchAccessTokenResponse.errorDescription,
-          });
-          break;
-        default:
-          sendJSONResponse(res, 500, {
-            error: Errors.Unexpected,
-            errorDescription: ERROR_DESCRIPTIONS.unexpectedResponseType,
-          });
-          break;
       }
 
       return;
@@ -296,36 +266,6 @@ const handleSnapchatUserUpdate = (object: WebhookObject): Promise<void> => {
 
   return Promise.resolve();
 };
-
-/**
- * Extracts access token from a request.
- * @param {functions.Request} req - the request to parse custom token params from
- * @return {AccessTokenParams} parsed custom token params
- */
-function extractAccessToken(req: functions.Request): string {
-  let accessToken: string;
-
-  const requestContentType = req.get("Content-Type");
-  switch (requestContentType) {
-    case ContentType.ApplicationJson:
-      ({accessToken} = req.body);
-      break;
-    case ContentType.FormUrlEncoded:
-      ({accessToken} = req.body);
-      break;
-    default:
-      log.logInfo("unsupported Content-Type " + requestContentType);
-      throw new TypeError(ERROR_DESCRIPTIONS.unsupportedContentType);
-  }
-
-  accessToken = accessToken ? accessToken.trim() : "";
-  if (accessToken.length <= 0) {
-    log.logInfo("missing accessToken in request payload");
-    throw new TypeError(ERROR_DESCRIPTIONS.accessTokenMissing);
-  }
-
-  return accessToken;
-}
 
 /**
  * Parses access token params from a request.
