@@ -7,8 +7,10 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "@types/content-type": "^1.1.5",
     "axios": "^0.21.1",
     "base64url": "^3.0.1",
+    "content-type": "^1.0.4",
     "firebase-admin": "^9.8.0",
     "firebase-functions": "^3.14.1",
     "form-data": "^4.0.0",

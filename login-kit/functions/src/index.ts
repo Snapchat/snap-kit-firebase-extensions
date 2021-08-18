@@ -3,6 +3,7 @@
  */
 
 import base64url from "base64url";
+import * as contentType from "content-type";
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
 
@@ -20,8 +21,15 @@ import * as log from "./logs";
 import {extractKidFromWebhookAuthToken, fetchAccessToken, verifyWebhookAuthToken} from "./snap-auth";
 
 enum ContentType {
-  ApplicationJson = "application/json;charset=UTF-8",
-  FormUrlEncoded = "application/x-www-form-urlencoded",
+  ApplicationJson = "application/json",
+}
+
+enum ContentTypeParam {
+  Charset = "charset",
+}
+
+enum ContentTypeParamValue {
+  CharsetUTF8 = "utf-8",
 }
 
 enum Errors {
@@ -278,11 +286,18 @@ function constructAccessTokenParams(req: functions.Request): AccessTokenParams {
   let redirectUri: string;
 
   const requestContentType = req.get("Content-Type");
-  switch (requestContentType) {
+  if (!requestContentType) {
+    log.logInfo("Content-Type header missing");
+    throw new TypeError(ERROR_DESCRIPTIONS.unsupportedContentType);
+  }
+
+  const contentTypeObj = contentType.parse(requestContentType);
+  switch (contentTypeObj.type) {
     case ContentType.ApplicationJson:
-      ({code, codeVerifier, redirectUri} = req.body);
-      break;
-    case ContentType.FormUrlEncoded:
+      if (contentTypeObj.parameters[ContentTypeParam.Charset].toLowerCase() !== ContentTypeParamValue.CharsetUTF8) {
+        log.logInfo("unsupported Content-Type " + requestContentType);
+        throw new TypeError(ERROR_DESCRIPTIONS.unsupportedContentType);
+      }
       ({code, codeVerifier, redirectUri} = req.body);
       break;
     default:
