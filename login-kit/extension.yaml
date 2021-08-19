@@ -29,6 +29,8 @@ apis:
     reason: Monitoring
   - apiName: logging.googleapis.com
     reason: Monitoring
+  - apiName: secretmanager.googleapis.com
+    reason: Securely strogin and reading Snap OAuth 2.0 client secret
 
 resources:
   - name: getCustomToken
@@ -94,6 +96,17 @@ params:
     validationErrorMessage: >-
       The client ID must be retrieved from the Snapchat developer portal and is in 
       UUID format.
+    required: true
+    immutable: false
+
+  - param: CLIENT_SECRET_SECRET_MANAGER_ID
+    label: The ID of the secret in Google Cloud Secret Manager that stores the OAuth 2.0 client secret
+    description: >-
+      The ID of the secret in Google Cloud secret manager (https://console.cloud.google.com/security/secret-manager)
+      that stores the secret for Snapchat Confidential OAuth 2.0 client.
+    type: string
+    example: projects/1085208910465/secrets/snap-snaplogin-clientsecret/versions/latest
+    validationRegex: ^(projects)/([a-zA-Z0-9]+)/(secrets)/([a-zA-Z0-9-_.]+)/(versions)/((latest)|[0-9]+)$
     required: true
     immutable: false
 

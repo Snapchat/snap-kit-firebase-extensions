@@ -6,6 +6,8 @@ import base64url from "base64url";
 import * as contentType from "content-type";
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
+import * as NodeCache from "node-cache";
+import {SecretManagerServiceClient} from "@google-cloud/secret-manager";
 
 import {fetchExternalId, fetchJwks} from "./canvas-api";
 import * as config from "./config";
@@ -19,6 +21,8 @@ import {
 } from "./interfaces";
 import * as log from "./logs";
 import {extractKidFromWebhookAuthToken, fetchAccessToken, verifyWebhookAuthToken} from "./snap-auth";
+
+const CACHE = new NodeCache();
 
 enum ContentType {
   ApplicationJson = "application/json",
@@ -78,14 +82,14 @@ exports.getCustomToken = functions.handler.https.onRequest(
         return;
       }
 
-      const clientSecret = functions.config().snap.snapchatlogin.client_secret;
-      if (!clientSecret) {
-        log.logInfo("clientSecret not found. run the following command to set the secret: " +
-            "firebase functions:config:set snap.snapchatlogin.client_secret=\"<client_secret>\"" +
-            "--project=<firebase_project>");
-        sendJSONResponse(res, 400, {
-          error: Errors.MissingConfig,
-          errorDescription: ERROR_DESCRIPTIONS.clientSecretMissing,
+      let clientSecret: string;
+      try {
+        clientSecret = await getClientSecret(config.default.oauthClientSecret);
+      } catch (error) {
+        log.logError("error reading client secret", error);
+        sendJSONResponse(res, 500, {
+          error: Errors.Unexpected,
+          errorDescription: error.message,
         });
         return;
       }
@@ -158,6 +162,34 @@ exports.getCustomToken = functions.handler.https.onRequest(
       return;
     }
 );
+
+const CLIENT_SECRET_KEY = "snap.snaplogin.clientsecret";
+const CLIENT_SECRET_CACHE_TTL_SECS = 600;
+
+const SECRET_MANAGER_SERVICE_CLIENT = new SecretManagerServiceClient();
+
+const getClientSecret = (secretName: string): Promise<string> => {
+  if (CACHE.has(CLIENT_SECRET_KEY)) {
+    const clientSecret = CACHE.get<string>(CLIENT_SECRET_KEY);
+    if (clientSecret) {
+      return Promise.resolve(clientSecret);
+    }
+  }
+
+  return SECRET_MANAGER_SERVICE_CLIENT
+      .accessSecretVersion({name: secretName})
+      .then(([secretResponse]) => {
+        if (!secretResponse.payload || !secretResponse.payload.data) {
+          throw new Error("failed to read client secret payload");
+        }
+
+        const clientSecret = secretResponse.payload.data.toString();
+
+        CACHE.set(CLIENT_SECRET_KEY, clientSecret, CLIENT_SECRET_CACHE_TTL_SECS);
+
+        return clientSecret;
+      });
+};
 
 enum ObjectType {
   SnapchatUser = "snapchat_user",

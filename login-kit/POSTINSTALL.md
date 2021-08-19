@@ -16,7 +16,7 @@ You can test out this extension right away!
 
 Visit the following URLs:
 ${function:getCustomToken.url}
-${function:updateUser}
+${function:updateUser.url}
 
 # Using the extension
 
