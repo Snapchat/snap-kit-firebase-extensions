@@ -26,6 +26,7 @@ const CACHE = new NodeCache();
 
 enum ContentType {
   ApplicationJson = "application/json",
+  TextPlain = "text/plain",
 }
 
 enum ContentTypeParam {
@@ -125,7 +126,7 @@ exports.getCustomToken = functions.handler.https.onRequest(
           admin.auth()
               .createCustomToken(externalIdBase64Url, {})
               .then((customToken) => {
-                res.status(200).send({customToken});
+                sendPlaintextResponse(res, 200, customToken)
               })
               .catch((error) => {
                 log.logError("Custom token creation failure", error);
@@ -369,7 +370,25 @@ function constructAccessTokenParams(req: functions.Request): AccessTokenParams {
  * @param {any} payload
  */
 function sendJSONResponse(res: functions.Response, status:number, payload: any): void {
-  res.status(status).contentType(ContentType.ApplicationJson).send(payload);
+  const contentTypeStr = contentType.format({
+    type: ContentType.ApplicationJson,
+    parameters: {charset: ContentTypeParamValue.CharsetUTF8}
+  })
+  res.status(status).contentType(contentTypeStr).send(payload);
+}
+
+/**
+ * Sends a plaintext response
+ * @param {functions.Response} res
+ * @param {number} status
+ * @param {any} payload
+ */
+ function sendPlaintextResponse(res: functions.Response, status:number, payload: any): void {
+  const contentTypeStr = contentType.format({
+    type: ContentType.TextPlain,
+    parameters: {charset: ContentTypeParamValue.CharsetUTF8}
+  })
+  res.status(status).contentType(contentTypeStr).send(payload);
 }
 
 /* eslint-enable */

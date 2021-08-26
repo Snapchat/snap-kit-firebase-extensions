@@ -30,7 +30,7 @@ apis:
   - apiName: logging.googleapis.com
     reason: Monitoring
   - apiName: secretmanager.googleapis.com
-    reason: Securely strogin and reading Snap OAuth 2.0 client secret
+    reason: Securely storing and reading Snap OAuth 2.0 client secret
 
 resources:
   - name: getCustomToken
