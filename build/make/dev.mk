@@ -37,3 +37,9 @@ dev/run/%:
 	pushd $(@F) ; \
 	firebase ext:dev:emulators:start --test-params=test-params.env --project=snap-connect-staging ; \
 	popd ;
+
+dev/install/%: dev/build/%
+	firebase ext:install ./login-kit  --project=snap-connect-staging;
+
+dev/update/%: dev/build/%
+	firebase ext:update $(instance-id) ./$(@F)  --project=snap-connect-staging;

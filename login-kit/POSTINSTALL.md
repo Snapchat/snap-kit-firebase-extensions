@@ -26,15 +26,10 @@ To learn more about HTTP functions, visit the [functions documentation](https://
 
 ## getCustomToken
 
-When triggered by an HTTP request, this extension resource responds with a
-[Firebase Custom Token](https://firebase.google.com/docs/auth/admin/create-custom-tokens) using Snapchat as the
-identity provider.
+When triggered by an HTTP request, this extension resource responds with a [Firebase Custom Token](https://firebase.google.com/docs/auth/admin/create-custom-tokens) using Snapchat as the identity provider.
 
 ## updateUser
-When triggered by an HTTP request, this extension resource updates users. Currently the only update supported is
-deletion of users created using Firebase Custom Authentication with Snapchat as the identity provider. This resource
-is not designed to be called explicitly, and should be used with Snap webhooks. Please DO NOT use unless you know
-exactly what you are doing wiht this resource.
+When triggered by an HTTP request, this extension resource updates users. Currently the only update supported is deletion of users created using Firebase Custom Authentication with Snapchat as the identity provider. This resource is not designed to be called explicitly, and should be used with Snap webhooks. Please DO NOT use unless you know exactly what you are doing wiht this resource.
 
 <!-- We recommend keeping the following section to explain how to monitor extensions with Firebase -->
 # Monitoring
