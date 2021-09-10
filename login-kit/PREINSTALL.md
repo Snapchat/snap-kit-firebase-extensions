@@ -7,7 +7,18 @@ Learn more about writing a PREINSTALL.md file in the docs:
 https://firebase.google.com/docs/extensions/alpha/create-user-docs#writing-preinstall
 -->
 
-Use this extension to let users authenticate with Firebase using their Snapchat accounts.
+# How this extension works
+
+Use this extension to allow your community of users to authenticate with Firebase using their Snapchat accounts. Snapchat has a massive reach, with millions of people using the app daily. Logging in via Snapchat allows you to tap into this audience, providing a quick and easy way for your users to sign up, log in, and avoid any obstacles. 
+
+# Recommended Usage
+
+This extension is meant to allow users to authenticate with Firebase using Snapchat as the identity provider. If you do not intend to use Firebase authentication, but still want to use Snapchat as an identity provider, please use [Snap Kit’s Login Kit](https://kit.snapchat.com/docs/login-kit).
+
+# Additional setup
+
+To get started, there are a few steps you will need to follow in order to set up, install, and integrate with this extension. This process is described in detail on our website. Please see [Snap Kit iOS Login Kit Firebase Extension Setup](<snap-kit-docs-link-here>) or [Snap Kit Android Login Kit Firebase Extension Setup](<snap-kit-docs-link-here>) for more information.
+
 
 <!-- We recommend keeping the following section to explain how billing for Firebase Extensions works -->
 # Billing
@@ -16,5 +27,7 @@ This extension uses other Firebase or Google Cloud Platform services which may h
 
 <!-- List all products the extension interacts with -->
 - Cloud Functions
+- Firebase Authentication
+- Secret Manager
 
-When you use Firebase Extensions, you're only charged for the underlying resources that you use. A paid-tier billing plan is only required if the extension uses a service that requires a paid-tier plan, for example calling to a Google Cloud Platform API or making outbound network requests to non-Google services. All Firebase services offer a free tier of usage. [Learn more about Firebase billing.](https://firebase.google.com/pricing)
+You are responsible for any costs associated with your use of these services.
