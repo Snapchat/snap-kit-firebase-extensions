@@ -17,7 +17,7 @@ This extension is meant to allow users to authenticate with Firebase using Snapc
 
 # Additional setup
 
-To get started, there are a few steps you will need to follow in order to set up, install, and integrate with this extension. This process is described in detail on our website. Please see [Snap Kit iOS Login Kit Firebase Extension Setup](https://kit.snapchat.com/docs/login-kit-firebase-ios) or [Snap Kit Android Login Kit Firebase Extension Setup](https://kit.snapchat.com/docs/login-kit-firebase-android/docs) for more information.
+To get started, there are a few steps you will need to follow in order to set up, install, and integrate with this extension. This process is described in detail on our website. Please see [Snap Kit iOS Login Kit Firebase Extension Setup](https://kit.snapchat.com/docs/login-kit-firebase-ios) or [Snap Kit Android Login Kit Firebase Extension Setup](https://kit.snapchat.com/docs/login-kit-firebase-android) for more information.
 
 
 <!-- We recommend keeping the following section to explain how billing for Firebase Extensions works -->
