@@ -90,7 +90,7 @@ exports.getCustomToken = functions.handler.https.onRequest(
         log.logError("error reading client secret", error);
         sendJSONResponse(res, 500, {
           error: Errors.Unexpected,
-          errorDescription: error.message,
+          errorDescription: errorDescription(error, "unknown error reading client secret"),
         });
         return;
       }
@@ -126,7 +126,7 @@ exports.getCustomToken = functions.handler.https.onRequest(
           admin.auth()
               .createCustomToken(externalIdBase64Url, {})
               .then((customToken) => {
-                sendPlaintextResponse(res, 200, customToken)
+                sendPlaintextResponse(res, 200, customToken);
               })
               .catch((error) => {
                 log.logError("Custom token creation failure", error);
@@ -308,11 +308,18 @@ const handleSnapchatUserUpdate = (object: WebhookObject): Promise<void> => {
   return Promise.resolve();
 };
 
+const errorDescription = (error: unknown, fallbackDescription: string): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallbackDescription;
+};
+
 /**
- * Parses access token params from a request.
- * @param {functions.Request} req - the request to parse access token params from
- * @return {AccessTokenParams} parsed access token params
- */
+* Parses access token params from a request.
+* @param {functions.Request} req - the request to parse access token params from
+* @return {AccessTokenParams} parsed access token params
+*/
 function constructAccessTokenParams(req: functions.Request): AccessTokenParams {
   let code: string;
   let codeVerifier: string;
@@ -364,30 +371,30 @@ function constructAccessTokenParams(req: functions.Request): AccessTokenParams {
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 
 /**
- * Sends a JSON response
- * @param {functions.Response} res
- * @param {number} status
- * @param {any} payload
- */
+* Sends a JSON response
+* @param {functions.Response} res
+* @param {number} status
+* @param {any} payload
+*/
 function sendJSONResponse(res: functions.Response, status:number, payload: any): void {
   const contentTypeStr = contentType.format({
     type: ContentType.ApplicationJson,
-    parameters: {charset: ContentTypeParamValue.CharsetUTF8}
-  })
+    parameters: {charset: ContentTypeParamValue.CharsetUTF8},
+  });
   res.status(status).contentType(contentTypeStr).send(payload);
 }
 
 /**
- * Sends a plaintext response
- * @param {functions.Response} res
- * @param {number} status
- * @param {any} payload
- */
- function sendPlaintextResponse(res: functions.Response, status:number, payload: any): void {
+* Sends a plaintext response
+* @param {functions.Response} res
+* @param {number} status
+* @param {any} payload
+*/
+function sendPlaintextResponse(res: functions.Response, status:number, payload: any): void {
   const contentTypeStr = contentType.format({
     type: ContentType.TextPlain,
-    parameters: {charset: ContentTypeParamValue.CharsetUTF8}
-  })
+    parameters: {charset: ContentTypeParamValue.CharsetUTF8},
+  });
   res.status(status).contentType(contentTypeStr).send(payload);
 }
 

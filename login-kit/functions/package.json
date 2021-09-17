@@ -2,8 +2,10 @@
   "name": "functions",
   "scripts": {
     "lint": "eslint \"src/**/*\"",
-    "build": "tsc",
-    "test": "mocha -r ts-node/register test/*.ts"
+    "build": "./node_modules/.bin/tsc",
+    "clean": "rm -rf node_modules && rm -rf lib",
+    "test": "mocha -r ts-node/register test/*.ts",
+    "postinstall": "npm run build"
   },
   "main": "lib/index.js",
   "dependencies": {
@@ -28,7 +30,7 @@
     "eslint-plugin-import": "^2.22.0",
     "mocha": "^9.0.3",
     "ts-node": "^10.1.0",
-    "typescript": "^3.8.0"
+    "typescript": "^4.4.3"
   },
   "private": true
 }
