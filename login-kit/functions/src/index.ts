@@ -316,10 +316,10 @@ const errorDescription = (error: unknown, fallbackDescription: string): string =
 };
 
 /**
-* Parses access token params from a request.
-* @param {functions.Request} req - the request to parse access token params from
-* @return {AccessTokenParams} parsed access token params
-*/
+ * Parses access token params from a request.
+ * @param {functions.Request} req - the request to parse access token params from
+ * @return {AccessTokenParams} parsed access token params
+ */
 function constructAccessTokenParams(req: functions.Request): AccessTokenParams {
   let code: string;
   let codeVerifier: string;
@@ -371,11 +371,11 @@ function constructAccessTokenParams(req: functions.Request): AccessTokenParams {
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 
 /**
-* Sends a JSON response
-* @param {functions.Response} res
-* @param {number} status
-* @param {any} payload
-*/
+ * Sends a JSON response
+ * @param {functions.Response} res
+ * @param {number} status
+ * @param {any} payload
+ */
 function sendJSONResponse(res: functions.Response, status:number, payload: any): void {
   const contentTypeStr = contentType.format({
     type: ContentType.ApplicationJson,
@@ -385,11 +385,11 @@ function sendJSONResponse(res: functions.Response, status:number, payload: any):
 }
 
 /**
-* Sends a plaintext response
-* @param {functions.Response} res
-* @param {number} status
-* @param {any} payload
-*/
+ * Sends a plaintext response
+ * @param {functions.Response} res
+ * @param {number} status
+ * @param {any} payload
+ */
 function sendPlaintextResponse(res: functions.Response, status:number, payload: any): void {
   const contentTypeStr = contentType.format({
     type: ContentType.TextPlain,
