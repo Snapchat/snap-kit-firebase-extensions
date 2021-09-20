@@ -2,7 +2,7 @@
 # https://firebase.google.com/docs/extensions/alpha/ref-extension-yaml
 
 name: snapchat-login
-version: 0.0.1
+version: 0.0.8
 specVersion: v1beta
 
 displayName: Snapchat Login
