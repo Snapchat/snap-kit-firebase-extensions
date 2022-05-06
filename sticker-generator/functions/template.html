@@ -1,0 +1,41 @@
+<html>
+  <head>
+    <link
+      href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <style>
+      .alfa {
+        font-family: 'Alfa Slab One', cursive;
+      }
+      .text-shadow {
+        text-shadow: 2px 2px 4px #000000;
+      }
+    </style>
+    <div>
+      {{#if headline}}
+      <p class="alfa text-6xl transform -rotate-6 relative z-10 pt-6 text-shadow text-white">
+        {{headline}}
+      </p>
+      {{/if}}
+      <div
+      class="mt-12 rounded-3xl shadow-3xl p-10 items-start 
+        {{#if isDark}}bg-black text-white{{/if}}
+        {{#if isLight}}bg-white text-black{{/if}}
+      "
+    >
+      <img class="mx-auto" src="{{productImage}}" />
+      <p class="text-5xl pt-4 font-bold">{{productName}}</p>
+      {{#if product.description}}<p class="text-3xl pt-3 font-bold">{{product.description}}</p>{{/if}}
+      {{#if productPrice}}<p class="text-4xl pt-4">{{productPrice}}</p>{{/if}}
+    </div>
+    <h2 class="pt-4 text-4xl font-extrabold text-white text-center text-shadow">{{cta}}</h2>
+    </div>
+    
+  </body>
+</html>
