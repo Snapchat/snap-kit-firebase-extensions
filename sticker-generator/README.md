@@ -1,6 +1,6 @@
 # Snapchat Sticker Generator
 
-**Author**: Invertase (**[https://invertase.io](https://invertase.io)**)
+**Author**: Snap (**[https://snap.com](https://snap.com)**)
 
 **Description**: Generate custom snapchat stickers based on product metadata.
 
