@@ -5,7 +5,7 @@ name: snapchat-login
 version: 0.1.0
 specVersion: v1beta
 
-displayName: Snapchat Login
+displayName: Authenticate with Snap Login Kit
 
 description: >-
   Signs in using Snapchat as the identity provider.
