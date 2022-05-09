@@ -2,7 +2,7 @@
 # https://firebase.google.com/docs/extensions/alpha/ref-extension-yaml
 
 name: snapchat-login
-version: 0.0.1
+version: 0.1.0
 specVersion: v1beta
 
 displayName: Snapchat Login
@@ -14,6 +14,9 @@ license: Apache-2.0
 
 author:
   authorName: Snap Inc.
+  url: https://www.snap.com
+
+sourceUrl: https://github.com/Snapchat/snap-kit-firebase-extensions/tree/main/login-kit
 
 billingRequired: true
 
