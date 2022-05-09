@@ -32,18 +32,10 @@ apis:
     reason: Monitoring
   - apiName: logging.googleapis.com
     reason: Monitoring
+  - apiName: secretmanager.googleapis.com
+    reason: Securely storing and reading Snap OAuth 2.0 client secret
 
 resources:
-  - name: getSnapAccessToken
-    type: firebaseextensions.v1beta.function
-    description: >-
-      HTTP request-triggered function that responds with a Snapchat OAuth 2.0 access token.
-    properties:
-      # LOCATION is a user-configured parameter value specified by the user
-      # during installation.
-      location: ${LOCATION}
-      httpsTrigger: {}
-      runtime: "nodejs12"
   - name: getCustomToken
     type: firebaseextensions.v1beta.function
     description: >-
@@ -107,6 +99,17 @@ params:
     validationErrorMessage: >-
       The client ID must be retrieved from the Snapchat developer portal and is in 
       UUID format.
+    required: true
+    immutable: false
+
+  - param: CLIENT_SECRET_SECRET_MANAGER_ID
+    label: The ID of the secret in Google Cloud Secret Manager that stores the OAuth 2.0 client secret
+    description: >-
+      The ID of the secret in Google Cloud secret manager (https://console.cloud.google.com/security/secret-manager)
+      that stores the secret for Snapchat Confidential OAuth 2.0 client.
+    type: string
+    example: projects/1085208910465/secrets/snap-snaplogin-clientsecret/versions/latest
+    validationRegex: ^(projects)/([a-zA-Z0-9]+)/(secrets)/([a-zA-Z0-9-_.]+)/(versions)/((latest)|[0-9]+)$
     required: true
     immutable: false
 

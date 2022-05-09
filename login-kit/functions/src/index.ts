@@ -3,18 +3,38 @@
  */
 
 import base64url from "base64url";
+import * as contentType from "content-type";
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
+import * as NodeCache from "node-cache";
+import {SecretManagerServiceClient} from "@google-cloud/secret-manager";
 
-import {fetchExternalId} from "./canvas-api";
+import {fetchExternalId, fetchJwks} from "./canvas-api";
 import * as config from "./config";
-import {AccessTokenParams, FetchAccessTokenResponse, Kind, MeResponse, WebhookObject} from "./interfaces";
+import {
+  AccessTokenParams,
+  FetchAccessTokenResponse,
+  FetchJWKResponse,
+  Kind,
+  MeResponse,
+  WebhookObject,
+} from "./interfaces";
 import * as log from "./logs";
-import {fetchAccessToken} from "./snap-auth";
+import {extractKidFromWebhookAuthToken, fetchAccessToken, verifyWebhookAuthToken} from "./snap-auth";
+
+const CACHE = new NodeCache();
 
 enum ContentType {
-  ApplicationJson = "application/json;charset=UTF-8",
-  FormUrlEncoded = "application/x-www-form-urlencoded",
+  ApplicationJson = "application/json",
+  TextPlain = "text/plain",
+}
+
+enum ContentTypeParam {
+  Charset = "charset",
+}
+
+enum ContentTypeParamValue {
+  CharsetUTF8 = "utf-8",
 }
 
 enum Errors {
@@ -31,8 +51,6 @@ const ERROR_DESCRIPTIONS = {
   codeVerifierMissing: "codeVerifier missing",
   redirectUriMissing: "redirectUri missing",
 
-  accessTokenMissing: "accessToken missing",
-
   clientSecretMissing: "snap.snapchatlogin.client_secret environment configuration missing",
 
   unexpectedStatus: "unexpected status",
@@ -47,9 +65,9 @@ admin.initializeApp({
 
 exports.getCustomToken = functions.handler.https.onRequest(
     async (req:functions.Request, res:functions.Response) => {
-      let accessToken: string;
+      let accessTokenParams: AccessTokenParams;
       try {
-        accessToken = extractAccessToken(req);
+        accessTokenParams = constructAccessTokenParams(req);
       } catch (error) {
         if (error instanceof TypeError) {
           sendJSONResponse(res, 400, {
@@ -59,10 +77,44 @@ exports.getCustomToken = functions.handler.https.onRequest(
         } else {
           sendJSONResponse(res, 500, {
             error: Errors.Unexpected,
-            errorDescription: "unknown error extracting access token",
+            errorDescription: "unknown error constructing access token params",
           });
         }
         return;
+      }
+
+      let clientSecret: string;
+      try {
+        clientSecret = await getClientSecret(config.default.oauthClientSecret);
+      } catch (error) {
+        log.logError("error reading client secret", error);
+        sendJSONResponse(res, 500, {
+          error: Errors.Unexpected,
+          errorDescription: error.message,
+        });
+        return;
+      }
+
+      const fetchAccessTokenResponse: FetchAccessTokenResponse =
+          await fetchAccessToken(accessTokenParams, clientSecret);
+
+      let accessToken: string;
+      switch (fetchAccessTokenResponse.kind) {
+        case Kind.AccessTokenResponse:
+          accessToken = fetchAccessTokenResponse.accessToken;
+          break;
+        case Kind.AccessTokenErrorResponse:
+          sendJSONResponse(res, fetchAccessTokenResponse.status, {
+            error: fetchAccessTokenResponse.error,
+            errorDescription: fetchAccessTokenResponse.errorDescription,
+          });
+          return;
+        default:
+          sendJSONResponse(res, 500, {
+            error: Errors.Unexpected,
+            errorDescription: ERROR_DESCRIPTIONS.unexpectedResponseType,
+          });
+          return;
       }
 
       const meResponse:MeResponse = await fetchExternalId(accessToken);
@@ -74,7 +126,7 @@ exports.getCustomToken = functions.handler.https.onRequest(
           admin.auth()
               .createCustomToken(externalIdBase64Url, {})
               .then((customToken) => {
-                res.status(200).send({customToken});
+                sendPlaintextResponse(res, 200, customToken)
               })
               .catch((error) => {
                 log.logError("Custom token creation failure", error);
@@ -112,67 +164,33 @@ exports.getCustomToken = functions.handler.https.onRequest(
     }
 );
 
-exports.getSnapAccessToken = functions.handler.https.onRequest(
-    async (req:functions.Request, res:functions.Response) => {
-      let accessTokenParams: AccessTokenParams;
-      try {
-        accessTokenParams = constructAccessTokenParams(req);
-      } catch (error) {
-        if (error instanceof TypeError) {
-          sendJSONResponse(res, 400, {
-            error: Errors.InvalidPayload,
-            errorDescription: error.message,
-          });
-        } else {
-          sendJSONResponse(res, 500, {
-            error: Errors.Unexpected,
-            errorDescription: "unknown error constructing access token params",
-          });
-        }
-        return;
-      }
+const CLIENT_SECRET_KEY = "snap.snaplogin.clientsecret";
+const CLIENT_SECRET_CACHE_TTL_SECS = 600;
 
-      const clientSecret = functions.config().snap.snapchatlogin.client_secret;
-      if (!clientSecret) {
-        log.logInfo("clientSecret not found. run the following command to set the secret: " +
-            "firebase functions:config:set snap.snapchatlogin.client_secret=\"<client_secret>\"" +
-            "--project=<firebase_project>");
-        sendJSONResponse(res, 400, {
-          error: Errors.MissingConfig,
-          errorDescription: ERROR_DESCRIPTIONS.clientSecretMissing,
-        });
-        return;
-      }
+const SECRET_MANAGER_SERVICE_CLIENT = new SecretManagerServiceClient();
 
-      const fetchAccessTokenResponse: FetchAccessTokenResponse =
-          await fetchAccessToken(accessTokenParams, clientSecret);
-
-      switch (fetchAccessTokenResponse.kind) {
-        case Kind.AccessTokenResponse:
-          sendJSONResponse(res, 200, {
-            accessToken: fetchAccessTokenResponse.accessToken,
-            tokenType: fetchAccessTokenResponse.tokenType,
-            expiresIn: fetchAccessTokenResponse.expiresIn,
-            scope: fetchAccessTokenResponse.scope,
-          });
-          break;
-        case Kind.AccessTokenErrorResponse:
-          sendJSONResponse(res, fetchAccessTokenResponse.status, {
-            error: fetchAccessTokenResponse.error,
-            errorDescription: fetchAccessTokenResponse.errorDescription,
-          });
-          break;
-        default:
-          sendJSONResponse(res, 500, {
-            error: Errors.Unexpected,
-            errorDescription: ERROR_DESCRIPTIONS.unexpectedResponseType,
-          });
-          break;
-      }
-
-      return;
+const getClientSecret = (secretName: string): Promise<string> => {
+  if (CACHE.has(CLIENT_SECRET_KEY)) {
+    const clientSecret = CACHE.get<string>(CLIENT_SECRET_KEY);
+    if (clientSecret) {
+      return Promise.resolve(clientSecret);
     }
-);
+  }
+
+  return SECRET_MANAGER_SERVICE_CLIENT
+      .accessSecretVersion({name: secretName})
+      .then(([secretResponse]) => {
+        if (!secretResponse.payload || !secretResponse.payload.data) {
+          throw new Error("failed to read client secret payload");
+        }
+
+        const clientSecret = secretResponse.payload.data.toString();
+
+        CACHE.set(CLIENT_SECRET_KEY, clientSecret, CLIENT_SECRET_CACHE_TTL_SECS);
+
+        return clientSecret;
+      });
+};
 
 enum ObjectType {
   SnapchatUser = "snapchat_user",
@@ -183,9 +201,16 @@ enum UpdateField {
 }
 
 const BEARER_TYPE = "Bearer";
+const BEARER_LENGTH = 6;
 
 exports.updateUser = functions.handler.https.onRequest(
     async (req:functions.Request, res:functions.Response) => {
+      if (!config.default.handleSnapchatUserDeletion) {
+        res.sendStatus(200);
+        log.logInfo("user not deleted!");
+        return;
+      }
+
       const authHeader = req.get("Authorization");
       if (!authHeader) {
         log.logInfo("Authorization header missing");
@@ -200,16 +225,35 @@ exports.updateUser = functions.handler.https.onRequest(
         log.logInfo("auth token is not Bearer type");
         sendJSONResponse(res, 401, {
           error: Errors.Unauthorized,
-          errorDescription: "invalid auth token",
+          errorDescription: "invalid auth token type",
         });
         return;
       }
 
-      // More authorization related code to come...
+      const token = authHeader.substr(BEARER_LENGTH).trim();
+      const kid = extractKidFromWebhookAuthToken(token);
+      if (kid == null || kid.length == 0) {
+        sendJSONResponse(res, 401, {
+          error: Errors.Unauthorized,
+          errorDescription: "mal-formatted authotken",
+        });
+        return;
+      }
 
-      if (config.default.handleSnapchatUserDeletion === "false") {
-        res.sendStatus(200);
-        log.logInfo("user not deleted!");
+      const jwksResponse: FetchJWKResponse = await fetchJwks(kid);
+      if (jwksResponse.kind == Kind.JWKError) {
+        sendJSONResponse(res, 401, {
+          error: Errors.Unauthorized,
+          errorDescription: "error fetching public JWKS",
+        });
+        return;
+      }
+
+      if (!verifyWebhookAuthToken(token, jwksResponse.keys, config.default.appId)) {
+        sendJSONResponse(res, 401, {
+          error: Errors.Unauthorized,
+          errorDescription: "invalid auth token",
+        });
         return;
       }
 
@@ -265,36 +309,6 @@ const handleSnapchatUserUpdate = (object: WebhookObject): Promise<void> => {
 };
 
 /**
- * Extracts access token from a request.
- * @param {functions.Request} req - the request to parse custom token params from
- * @return {AccessTokenParams} parsed custom token params
- */
-function extractAccessToken(req: functions.Request): string {
-  let accessToken: string;
-
-  const requestContentType = req.get("Content-Type");
-  switch (requestContentType) {
-    case ContentType.ApplicationJson:
-      ({accessToken} = req.body);
-      break;
-    case ContentType.FormUrlEncoded:
-      ({accessToken} = req.body);
-      break;
-    default:
-      log.logInfo("unsupported Content-Type " + requestContentType);
-      throw new TypeError(ERROR_DESCRIPTIONS.unsupportedContentType);
-  }
-
-  accessToken = accessToken ? accessToken.trim() : "";
-  if (accessToken.length <= 0) {
-    log.logInfo("missing accessToken in request payload");
-    throw new TypeError(ERROR_DESCRIPTIONS.accessTokenMissing);
-  }
-
-  return accessToken;
-}
-
-/**
  * Parses access token params from a request.
  * @param {functions.Request} req - the request to parse access token params from
  * @return {AccessTokenParams} parsed access token params
@@ -305,11 +319,18 @@ function constructAccessTokenParams(req: functions.Request): AccessTokenParams {
   let redirectUri: string;
 
   const requestContentType = req.get("Content-Type");
-  switch (requestContentType) {
+  if (!requestContentType) {
+    log.logInfo("Content-Type header missing");
+    throw new TypeError(ERROR_DESCRIPTIONS.unsupportedContentType);
+  }
+
+  const contentTypeObj = contentType.parse(requestContentType);
+  switch (contentTypeObj.type) {
     case ContentType.ApplicationJson:
-      ({code, codeVerifier, redirectUri} = req.body);
-      break;
-    case ContentType.FormUrlEncoded:
+      if (contentTypeObj.parameters[ContentTypeParam.Charset].toLowerCase() !== ContentTypeParamValue.CharsetUTF8) {
+        log.logInfo("unsupported Content-Type " + requestContentType);
+        throw new TypeError(ERROR_DESCRIPTIONS.unsupportedContentType);
+      }
       ({code, codeVerifier, redirectUri} = req.body);
       break;
     default:
@@ -349,7 +370,25 @@ function constructAccessTokenParams(req: functions.Request): AccessTokenParams {
  * @param {any} payload
  */
 function sendJSONResponse(res: functions.Response, status:number, payload: any): void {
-  res.status(status).contentType(ContentType.ApplicationJson).send(payload);
+  const contentTypeStr = contentType.format({
+    type: ContentType.ApplicationJson,
+    parameters: {charset: ContentTypeParamValue.CharsetUTF8}
+  })
+  res.status(status).contentType(contentTypeStr).send(payload);
+}
+
+/**
+ * Sends a plaintext response
+ * @param {functions.Response} res
+ * @param {number} status
+ * @param {any} payload
+ */
+ function sendPlaintextResponse(res: functions.Response, status:number, payload: any): void {
+  const contentTypeStr = contentType.format({
+    type: ContentType.TextPlain,
+    parameters: {charset: ContentTypeParamValue.CharsetUTF8}
+  })
+  res.status(status).contentType(contentTypeStr).send(payload);
 }
 
 /* eslint-enable */

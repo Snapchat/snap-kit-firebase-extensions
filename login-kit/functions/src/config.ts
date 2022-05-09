@@ -3,10 +3,11 @@
  */
 
 export default {
-  appId: process.env.APP_ID,
-  confidentialOAuthClientId: process.env.CONFIDENTIAL_OAUTH_CLIENT_ID,
-  signingServiceAcocunt: process.env.SIGNING_SERVICE_ACCOUNT,
-  handleSnapchatUserDeletion: process.env.HANDLE_SNAPCHAT_USER_DELETION,
+  appId: String(process.env.APP_ID),
+  confidentialOAuthClientId: String(process.env.CONFIDENTIAL_OAUTH_CLIENT_ID),
+  oauthClientSecret: String(process.env.CLIENT_SECRET_SECRET_MANAGER_ID),
+  signingServiceAcocunt: String(process.env.SIGNING_SERVICE_ACCOUNT),
+  handleSnapchatUserDeletion: process.env.HANDLE_SNAPCHAT_USER_DELETION === "true",
 
   authServiceUrl: "https://accounts.snapchat.com",
   accessTokenEndpointPath: "accounts/oauth2/token",

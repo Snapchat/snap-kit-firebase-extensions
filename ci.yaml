@@ -14,4 +14,4 @@ on:
 machamp:
   # Defines which branch commit will trigger docker image release.
   releases:
-    - branch_name: ^master$
+    - branch_name: ^main$

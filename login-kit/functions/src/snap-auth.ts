@@ -3,6 +3,7 @@
  */
 
 import axios from "axios";
+import base64url from "base64url";
 import {JWK, JWKS, JWT} from "jose";
 
 import * as config from "./config";
@@ -47,6 +48,16 @@ export const fetchAccessToken = (
         return constructAccessTokenErrorResponse(error.response.status, error.response.data.error,
             error.response.data.error_description);
       });
+};
+
+export const extractKidFromWebhookAuthToken = (authToken: string): string | null => {
+  const tokenParts = authToken.split(".");
+  if (tokenParts.length != 3) {
+    return null;
+  }
+
+  const header = JSON.parse(base64url.decode(tokenParts[0]));
+  return header.kid;
 };
 
 const ISS_SNAPCHAT = "Snapchat";
