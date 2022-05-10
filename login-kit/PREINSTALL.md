@@ -30,6 +30,6 @@ This extension uses other Firebase or Google Cloud Platform services which may h
 
 This extension also uses the following third-party services:
 
-- Snap Login Kiy ([pricing information](https://kit.snapchat.com/login-kit))
+- Snap Login Kit ([pricing information](https://kit.snapchat.com/login-kit))
 
 You are responsible for any costs associated with your use of these services.
