@@ -1,9 +1,9 @@
 name: snapchat-sticker-generator
-version: 0.0.1
+version: 0.1.0
 specVersion: v1beta
 
 displayName: Snapchat Sticker Generator
-description: Generate custom snapchat stickers based on product metadata.
+description: Creates custom Snapchat stickers based on product metadata.
 
 license: Apache-2.0
 

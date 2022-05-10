@@ -7,8 +7,6 @@ Learn more about writing a PREINSTALL.md file in the docs:
 https://firebase.google.com/docs/extensions/alpha/create-user-docs#writing-preinstall
 -->
 
-# How this extension works
-
 Use this extension to allow your community of users to authenticate with Firebase using their Snapchat accounts. Snapchat has a massive reach, with millions of people using the app daily. Logging in via Snapchat allows you to tap into this audience, providing a quick and easy way for your users to sign up, log in, and avoid any obstacles. 
 
 # Recommended Usage
@@ -29,5 +27,9 @@ This extension uses other Firebase or Google Cloud Platform services which may h
 - Cloud Functions
 - Firebase Authentication
 - Secret Manager
+
+This extension also uses the following third-party services:
+
+- Snap Login Kit ([pricing information](https://kit.snapchat.com/login-kit))
 
 You are responsible for any costs associated with your use of these services.
