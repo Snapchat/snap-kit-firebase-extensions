@@ -1,6 +1,6 @@
 ### See the Extension in Action
 
-See an example of how to [genrate](https://github.com/Snapchat/snap-kit-firebase-extensions/blob/main/sticker-generator/example/index.html) a Snapchat sticker.
+See an example of how to [generate](https://github.com/Snapchat/snap-kit-firebase-extensions/blob/main/sticker-generator/example/index.html) a Snapchat sticker.
 
 ### Using this extension
 
